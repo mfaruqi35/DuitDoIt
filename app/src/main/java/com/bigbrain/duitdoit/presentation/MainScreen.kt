@@ -14,6 +14,11 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.bigbrain.duitdoit.R
+import com.bigbrain.duitdoit.ui.theme.Background
+import androidx.compose.material3.NavigationBarItemDefaults
+import com.bigbrain.duitdoit.ui.theme.Primary
+import com.bigbrain.duitdoit.ui.theme.Secondary
+import com.bigbrain.duitdoit.ui.theme.TextSecondary
 
 data class BottomNavItem(
     val route: String,
@@ -27,7 +32,7 @@ fun MainScreen() {
     val navController = rememberNavController()
     val bottomNavItems = listOf(
         BottomNavItem(Screen.Dashboard.route, "Dashboard", R.drawable.ic_nav_def_dashboard, R.drawable.ic_nav_fill_dashboard),
-        BottomNavItem(Screen.Analytics.route, "Analytics", R.drawable.ic_nav_def_analytics, R.drawable.ic_nav_fill_analytics),
+        BottomNavItem(Screen.Analytics.route, "Analytics", R.drawable.ic_analytics_def, R.drawable.ic_analytics_fill),
         BottomNavItem(Screen.Accounts.route, "Accounts", R.drawable.ic_nav_def_account, R.drawable.ic_nav_fill_accounts),
         BottomNavItem(Screen.Extras.route, "Extras", R.drawable.ic_nav_def_extras, R.drawable.ic_nav_fill_extras),
     )
@@ -46,7 +51,7 @@ fun BottomNavBares(navController: NavHostController, items: List<BottomNavItem>)
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    NavigationBar {
+    NavigationBar (containerColor= Background){
         items.forEach { item ->
             NavigationBarItem(
                 selected = currentRoute == item.route,
@@ -65,7 +70,14 @@ fun BottomNavBares(navController: NavHostController, items: List<BottomNavItem>)
                         contentDescription = item.label
                     )
                 },
-                label = { Text(text = item.label) }
+                label = { Text(text = item.label) },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = Primary,
+                    selectedTextColor = Primary,
+                    unselectedIconColor = TextSecondary,
+                    unselectedTextColor = TextSecondary,
+                    indicatorColor = Secondary
+                )
             )
         }
     }
