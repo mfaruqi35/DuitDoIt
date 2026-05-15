@@ -5,6 +5,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.compose.ui.Modifier
+import com.bigbrain.duitdoit.presentation.dashboard.AccountsScreen
+import com.bigbrain.duitdoit.presentation.dashboard.AnalyticsScreen
+import com.bigbrain.duitdoit.presentation.dashboard.DashboardScreen
+import com.bigbrain.duitdoit.presentation.dashboard.ExtrasScreen
 
 sealed class Screen(val route: String){
     object Dashboard : Screen("dashboard")
@@ -22,16 +26,16 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
         modifier = modifier
     ) {
         composable(Screen.Dashboard.route) {
-            // DashboardScreen()
+            DashboardScreen()
         }
         composable(Screen.Analytics.route) {
-            // AnalyticsScreen()
+            AnalyticsScreen()
         }
         composable(Screen.Accounts.route) {
-            // AccountScreen()
+            AccountsScreen()
         }
         composable(Screen.Extras.route) {
-            // ExtrasScreen()
+            ExtrasScreen()
         }
         composable(Screen.AddTransaction.route) {
             // AddTransactionScreen()
