@@ -4,6 +4,7 @@ import androidx.room.*
 import com.bigbrain.duitdoit.data.local.entity.CategoryEntity
 import kotlinx.coroutines.flow.Flow
 
+@Dao
 interface CategoryDao {
     @Query("SELECT * FROM categories")
     fun getAllCategories(): Flow<List<CategoryEntity>>

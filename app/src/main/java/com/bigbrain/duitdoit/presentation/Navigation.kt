@@ -1,0 +1,40 @@
+package com.bigbrain.duitdoit.presentation
+
+import androidx.compose.runtime.Composable
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.compose.ui.Modifier
+
+sealed class Screen(val route: String){
+    object Dashboard : Screen("dashboard")
+    object Analytics : Screen("analytics")
+    object Accounts : Screen("accounts")
+    object Extras : Screen("extras")
+    object AddTransaction : Screen("addTransaction")
+}
+
+@Composable
+fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) {
+    NavHost(
+        navController = navController,
+        startDestination = Screen.Dashboard.route,
+        modifier = modifier
+    ) {
+        composable(Screen.Dashboard.route) {
+            // DashboardScreen()
+        }
+        composable(Screen.Analytics.route) {
+            // AnalyticsScreen()
+        }
+        composable(Screen.Accounts.route) {
+            // AccountScreen()
+        }
+        composable(Screen.Extras.route) {
+            // ExtrasScreen()
+        }
+        composable(Screen.AddTransaction.route) {
+            // AddTransactionScreen()
+        }
+    }
+}
