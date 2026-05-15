@@ -5,10 +5,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.compose.ui.Modifier
-import com.bigbrain.duitdoit.presentation.dashboard.AccountsScreen
-import com.bigbrain.duitdoit.presentation.dashboard.AnalyticsScreen
+import com.bigbrain.duitdoit.presentation.accounts.AccountsScreen
+import com.bigbrain.duitdoit.presentation.analytics.AnalyticsScreen
 import com.bigbrain.duitdoit.presentation.dashboard.DashboardScreen
-import com.bigbrain.duitdoit.presentation.dashboard.ExtrasScreen
+import com.bigbrain.duitdoit.presentation.extras.ExtrasScreen
 
 sealed class Screen(val route: String){
     object Dashboard : Screen("dashboard")

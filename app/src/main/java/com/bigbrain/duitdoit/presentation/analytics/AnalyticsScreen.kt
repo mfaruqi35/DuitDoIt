@@ -1,4 +1,4 @@
-package com.bigbrain.duitdoit.presentation.dashboard
+package com.bigbrain.duitdoit.presentation.analytics
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,11 +8,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 
 @Composable
-fun AccountsScreen() {
+fun AnalyticsScreen() {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Text(text = "Accounts")
+        Text(text = "Analytics")
     }
 }
