@@ -1,6 +1,7 @@
 package com.bigbrain.duitdoit.presentation.analytics
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -23,6 +24,7 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionScreen(
+    onNavigateToDetail: (Long) -> Unit,
     viewModel: TransactionViewModel = hiltViewModel()
 ) {
     val transactions by viewModel.transactions.collectAsState()
@@ -174,7 +176,10 @@ fun TransactionScreen(
                             )
                         }
                         items(txList) { transaction ->
-                            TransactionItem(transaction = transaction)
+                            TransactionItem(
+                                transaction = transaction,
+                                onClick = { onNavigateToDetail(transaction.id) }
+                            )
                         }
                     }
                 }
@@ -184,9 +189,12 @@ fun TransactionScreen(
 }
 
 @Composable
-fun TransactionItem(transaction: TransactionEntity) {
+fun TransactionItem(
+    transaction: TransactionEntity,
+    onClick: () -> Unit
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {

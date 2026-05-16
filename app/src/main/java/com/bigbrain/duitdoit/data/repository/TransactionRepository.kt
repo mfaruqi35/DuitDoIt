@@ -18,6 +18,7 @@ class TransactionRepository @Inject constructor(
     fun getTotalIncome(startDate: Long, endDate: Long): Flow<Double?> = transactionDao.getTotalIncome(startDate, endDate)
     fun getTotalExpense(startDate: Long, endDate: Long): Flow<Double?> = transactionDao.getTotalExpense(startDate, endDate)
     suspend fun insertTransaction(transaction: TransactionEntity): Long = transactionDao.insertTransaction(transaction)
+    suspend fun getTransactionById(id: Long): TransactionEntity? = transactionDao.getTransactionById(id)
     suspend fun updateTransaction(transaction: TransactionEntity) = transactionDao.updateTransaction(transaction)
     suspend fun deleteTransaction(transaction: TransactionEntity) = transactionDao.deleteTransaction(transaction)
 }

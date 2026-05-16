@@ -25,6 +25,8 @@ class TransactionViewModel @Inject constructor(
     private val _transactions = MutableStateFlow<List<TransactionEntity>>(emptyList())
     val transactions: StateFlow<List<TransactionEntity>> = _transactions.asStateFlow()
 
+    private val _selectedTransaction = MutableStateFlow<TransactionEntity?>(null)
+    val selectedTransaction: StateFlow<TransactionEntity?> = _selectedTransaction.asStateFlow()
     private val _totalIncome = MutableStateFlow(0.0)
     val totalIncome: StateFlow<Double> = _totalIncome.asStateFlow()
 
@@ -59,6 +61,73 @@ class TransactionViewModel @Inject constructor(
             categoryRepository.getAllCategories().collect {
                 _categories.value = it
             }
+        }
+    }
+    fun loadTransactionById(id: Long){
+        viewModelScope.launch {
+            _selectedTransaction.value = transactionRepository.getTransactionById(id)
+        }
+    }
+    fun updateTransaction(
+        id: Long,
+        accountId: Long,
+        categoryId: Long,
+        type: String,
+        amount: Double,
+        note: String,
+        date: Long,
+        onSuccess: () -> Unit
+    ) {
+        viewModelScope.launch {
+            val old = transactionRepository.getTransactionById(id)
+            old?.let {
+                val oldAccount = accountRepository.getAccountById(it.accountId)
+                oldAccount?.let { acc ->
+                    val revertedBalance = if (it.type == "income") {
+                        acc.balance - it.amount
+                    } else {
+                        acc.balance + it.amount
+                    }
+                    accountRepository.updateAccount(acc.copy(balance = revertedBalance))
+                }
+            }
+            val newAccount = accountRepository.getAccountById(accountId)
+            newAccount?.let {
+                if (type == "expense" && it.balance < amount) {
+                    _errorMessage.value = "Insufficient balance"
+                    return@launch
+                }
+                transactionRepository.updateTransaction(
+                    TransactionEntity(
+                        id = id,
+                        accountId = accountId,
+                        categoryId = categoryId,
+                        type = type,
+                        amount = amount,
+                        note = note,
+                        date = date
+                    )
+                )
+                val newBalance = if (type == "income") it.balance + amount else it.balance - amount
+                accountRepository.updateAccount(it.copy(balance = newBalance))
+                _errorMessage.value = null
+                onSuccess()
+            }
+        }
+    }
+    fun deleteTransaction(transaction: TransactionEntity, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            val account = accountRepository.getAccountById(transaction.accountId)
+            account?.let {
+                val revertedBalance = if (transaction.type == "income") {
+                    it.balance - transaction.amount
+                } else {
+                    it.balance + transaction.amount
+                }
+                accountRepository.updateAccount(it.copy(balance = revertedBalance))
+            }
+            transactionRepository.deleteTransaction(transaction)
+            onSuccess()
         }
     }
 

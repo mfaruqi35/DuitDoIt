@@ -14,6 +14,8 @@ import com.bigbrain.duitdoit.presentation.dashboard.DashboardScreen
 import com.bigbrain.duitdoit.presentation.extras.ExtrasScreen
 import com.bigbrain.duitdoit.presentation.extras.RegularPaymentListScreen
 import com.bigbrain.duitdoit.presentation.extras.WishlistListScreen
+import com.bigbrain.duitdoit.presentation.analytics.TransactionDetailScreen
+
 
 sealed class Screen(val route: String){
     object Dashboard : Screen("dashboard")
@@ -21,6 +23,9 @@ sealed class Screen(val route: String){
     object Accounts : Screen("accounts")
     object Extras : Screen("extras")
     object AddTransaction : Screen("addTransaction")
+    object TransactionDetail : Screen("transaction_detail/{transactionId}") {
+        fun createRoute(transactionId: String) = "transaction_detail/$transactionId"
+    }
     object AddAccount : Screen("add_account")
     object WishlistList : Screen("wishlist_list")
     object RegularPaymentList : Screen("regular_payment_list")
@@ -37,7 +42,11 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
             DashboardScreen()
         }
         composable(Screen.Analytics.route) {
-            TransactionScreen()
+            TransactionScreen(
+                onNavigateToDetail = { id ->
+                    navController.navigate(Screen.TransactionDetail.createRoute(id.toString()))
+                }
+            )
         }
         composable(Screen.Accounts.route) {
             AccountsScreen(
@@ -62,6 +71,15 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
             AddAccountScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
+        }
+        composable(Screen.TransactionDetail.createRoute("{transactionId}")) { backStackEntry ->
+            val transactionId = backStackEntry.arguments?.getString("transactionId")?.toLongOrNull()
+            transactionId?.let {
+                TransactionDetailScreen(
+                    transactionId = it,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
         }
         composable(Screen.AddTransaction.route) {
             AddTransactionScreen(
