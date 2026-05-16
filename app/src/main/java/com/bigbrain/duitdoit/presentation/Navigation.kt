@@ -8,7 +8,7 @@ import androidx.compose.ui.Modifier
 import com.bigbrain.duitdoit.presentation.accounts.AccountsScreen
 import com.bigbrain.duitdoit.presentation.accounts.AddAccountScreen
 import com.bigbrain.duitdoit.presentation.analytics.AddTransactionScreen
-import com.bigbrain.duitdoit.presentation.analytics.AnalyticsScreen
+import com.bigbrain.duitdoit.presentation.analytics.TransactionScreen
 import com.bigbrain.duitdoit.presentation.dashboard.DashboardScreen
 import com.bigbrain.duitdoit.presentation.extras.ExtrasScreen
 
@@ -32,7 +32,7 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
             DashboardScreen()
         }
         composable(Screen.Analytics.route) {
-            AnalyticsScreen()
+            TransactionScreen()
         }
         composable(Screen.Accounts.route) {
             AccountsScreen(
