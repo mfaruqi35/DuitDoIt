@@ -23,6 +23,7 @@ import com.bigbrain.duitdoit.ui.theme.*
 @Composable
 fun AccountsScreen(
     onNavigateToAddAccount: () -> Unit,
+    onNavigateToTransfer: () -> Unit,
     viewModel: AccountsViewModel = hiltViewModel()
 ) {
     val accounts by viewModel.accounts.collectAsState()
@@ -54,6 +55,16 @@ fun AccountsScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = Primary)
             ) {
                 Text("Add Account", fontFamily = Poppins)
+            }
+            Button(
+                onClick = onNavigateToTransfer,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(100.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Primary)
+            ) {
+                Text("Transfer", fontFamily = Poppins)
             }
 
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -92,6 +103,7 @@ fun AccountItem(account: AccountEntity) {
                 fontSize = 16.sp,
                 color = Primary
             )
+
         }
     }
 }

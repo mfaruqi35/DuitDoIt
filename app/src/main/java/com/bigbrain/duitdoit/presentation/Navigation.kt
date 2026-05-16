@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.compose.ui.Modifier
 import com.bigbrain.duitdoit.presentation.accounts.AccountsScreen
 import com.bigbrain.duitdoit.presentation.accounts.AddAccountScreen
+import com.bigbrain.duitdoit.presentation.accounts.TransferScreen
 import com.bigbrain.duitdoit.presentation.analytics.AddTransactionScreen
 import com.bigbrain.duitdoit.presentation.analytics.TransactionScreen
 import com.bigbrain.duitdoit.presentation.dashboard.DashboardScreen
@@ -21,6 +22,8 @@ sealed class Screen(val route: String){
     object Dashboard : Screen("dashboard")
     object Analytics : Screen("analytics")
     object Accounts : Screen("accounts")
+    object Transfer : Screen("transfer")
+    object TransferHistory : Screen("transfer_history")
     object Extras : Screen("extras")
     object AddTransaction : Screen("addTransaction")
     object TransactionDetail : Screen("transaction_detail/{transactionId}") {
@@ -50,7 +53,8 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
         }
         composable(Screen.Accounts.route) {
             AccountsScreen(
-                onNavigateToAddAccount = { navController.navigate(Screen.AddAccount.route) }
+                onNavigateToAddAccount = { navController.navigate(Screen.AddAccount.route) },
+                onNavigateToTransfer = { navController.navigate(Screen.Transfer.route) }
             )
         }
         composable(Screen.Extras.route) {
@@ -69,6 +73,11 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
         }
         composable(Screen.AddAccount.route) {
             AddAccountScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable(Screen.Transfer.route) {
+            TransferScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
