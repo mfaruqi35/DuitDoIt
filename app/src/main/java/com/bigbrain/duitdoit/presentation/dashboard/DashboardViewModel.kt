@@ -34,9 +34,19 @@ class DashboardViewModel @Inject constructor(
     private val _totalExpense = MutableStateFlow(0.0)
     val totalExpense: StateFlow<Double> = _totalExpense.asStateFlow()
 
+    private val _selectedPeriod = MutableStateFlow("monthly")
+    val selectedPeriod: StateFlow<String> = _selectedPeriod.asStateFlow()
+
+    private val _selectedTab = MutableStateFlow("expense")
+    val selectedTab: StateFlow<String> = _selectedTab.asStateFlow()
+
+    private val _displayBalance = MutableStateFlow(0.0)
+    val displayBalance: StateFlow<Double> = _displayBalance.asStateFlow()
+
     init {
         loadAccounts()
         loadTotalBalance()
+        updateDisplayBalance()
     }
 
     private fun loadAccounts() {
@@ -54,10 +64,33 @@ class DashboardViewModel @Inject constructor(
             }
         }
     }
+    private fun updateDisplayBalance() {
+        viewModelScope.launch {
+            val accountId = _selectedAccountId.value
+            if (accountId == null) {
+                accountRepository.getTotalBalance().collect {
+                    _displayBalance.value = it ?: 0.0
+                }
+            } else {
+                val account = accountRepository.getAccountById(accountId)
+                _displayBalance.value = account?.balance ?: 0.0
+            }
+        }
+    }
 
     fun selectAccount(accountId: Long?) {
         _selectedAccountId.value = accountId
+        updateDisplayBalance()
     }
+
+    fun selectPeriod(period: String) {
+        _selectedPeriod.value = period
+    }
+
+    fun selectTab(tab: String) {
+        _selectedTab.value = tab
+    }
+
 
     fun loadTransactionSummary(startDate: Long, endDate: Long) {
         viewModelScope.launch {

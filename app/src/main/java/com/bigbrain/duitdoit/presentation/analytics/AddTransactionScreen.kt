@@ -36,6 +36,7 @@ fun AddTransactionScreen(
     val filteredCategories = categories.filter { it.type == selectedType }
     val selectedAccount = accounts.find { it.id == selectedAccountId }
     val selectedCategory = categories.find { it.id == selectedCategoryId }
+    val errorMessage by viewModel.errorMessage.collectAsState()
 
     Scaffold(
         topBar = {
@@ -85,6 +86,13 @@ fun AddTransactionScreen(
                         )
                     )
                 }
+            }
+            errorMessage?.let {
+                Text(
+                    text = it,
+                    color = Expense,
+                    fontFamily = Poppins
+                )
             }
 
             // Amount
@@ -158,9 +166,9 @@ fun AddTransactionScreen(
                             type = selectedType,
                             amount = amount.toDoubleOrNull() ?: 0.0,
                             note = note,
-                            date = selectedDate
+                            date = selectedDate,
+                            onSuccess = { onNavigateBack() }
                         )
-                        onNavigateBack()
                     }
                 },
                 modifier = Modifier

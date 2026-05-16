@@ -28,6 +28,8 @@ class TransactionViewModel @Inject constructor(
     private val _categories = MutableStateFlow<List<CategoryEntity>>(emptyList())
     val categories: StateFlow<List<CategoryEntity>> = _categories.asStateFlow()
 
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
     init {
         loadAccounts()
         loadCategories()
@@ -55,19 +57,35 @@ class TransactionViewModel @Inject constructor(
         type: String,
         amount: Double,
         note: String,
-        date: Long
+        date: Long,
+        onSuccess: () -> Unit
     ) {
         viewModelScope.launch {
-            transactionRepository.insertTransaction(
-                TransactionEntity(
-                    accountId = accountId,
-                    categoryId = categoryId,
-                    type = type,
-                    amount = amount,
-                    note = note,
-                    date = date
+            val account = accountRepository.getAccountById(accountId)
+            account?.let {
+                if (type == "expense" && it.balance < amount) {
+                    _errorMessage.value = "Insufficient balance"
+                    return@launch
+                }
+                transactionRepository.insertTransaction(
+                    TransactionEntity(
+                        accountId = accountId,
+                        categoryId = categoryId,
+                        type = type,
+                        amount = amount,
+                        note = note,
+                        date = date
+                    )
                 )
-            )
+                val newBalance = if (type == "income") {
+                    it.balance + amount
+                } else {
+                    it.balance - amount
+                }
+                accountRepository.updateAccount(it.copy(balance = newBalance))
+                _errorMessage.value = null
+                onSuccess()
+            }
         }
     }
 }

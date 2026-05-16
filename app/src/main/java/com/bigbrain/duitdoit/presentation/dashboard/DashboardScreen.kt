@@ -26,6 +26,9 @@ fun DashboardScreen(
     val accounts by viewModel.accounts.collectAsState()
     val totalBalance by viewModel.totalBalance.collectAsState()
     val selectedAccountId by viewModel.selectedAccountId.collectAsState()
+    val selectedPeriod by viewModel.selectedPeriod.collectAsState()
+    val selectedTab by viewModel.selectedTab.collectAsState()
+    val displayBalance by viewModel.displayBalance.collectAsState()
 
     Column(
         modifier = Modifier
@@ -34,11 +37,106 @@ fun DashboardScreen(
             .verticalScroll(rememberScrollState())
     ) {
         DashboardHeader(
-            totalBalance = totalBalance,
+            totalBalance = displayBalance,
             accounts = accounts,
             selectedAccountId = selectedAccountId,
             onAccountSelected = { viewModel.selectAccount(it) }
         )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        ChartCard(
+            selectedTab = selectedTab,
+            selectedPeriod = selectedPeriod,
+            onTabSelected = { viewModel.selectTab(it) },
+            onPeriodSelected = { viewModel.selectPeriod(it) }
+        )
+    }
+}
+
+
+@Composable
+fun ChartCard(
+    selectedTab: String,
+    selectedPeriod: String,
+    onTabSelected: (String) -> Unit,
+    onPeriodSelected: (String) -> Unit
+) {
+    val periods = listOf("daily", "weekly", "monthly", "yearly")
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Tab
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                listOf("expense", "income").forEach { tab ->
+                    FilterChip(
+                        selected = selectedTab == tab,
+                        onClick = { onTabSelected(tab) },
+                        label = {
+                            Text(
+                                tab.replaceFirstChar { it.uppercase() },
+                                fontFamily = Poppins
+                            )
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = Primary,
+                            selectedLabelColor = Color.White
+                        )
+                    )
+                }
+            }
+
+            // Period filter
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                periods.forEach { period ->
+                    FilterChip(
+                        selected = selectedPeriod == period,
+                        onClick = { onPeriodSelected(period) },
+                        label = {
+                            Text(
+                                period.replaceFirstChar { it.uppercase() }.take(1) + period.drop(1),
+                                fontFamily = Poppins
+                            )
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = Primary,
+                            selectedLabelColor = Color.White
+                        )
+                    )
+                }
+            }
+
+            // Placeholder donut chart
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Donut Chart",
+                    fontFamily = Poppins,
+                    color = TextSecondary
+                )
+            }
+        }
     }
 }
 
@@ -63,7 +161,7 @@ fun DashboardHeader(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = if (selectedAccount != null) selectedAccount.name else "All Accounts",
+                    text = selectedAccount?.name ?: "All Accounts",
                     color = Color.White.copy(alpha = 0.8f),
                     fontSize = 14.sp,
                     fontFamily = Poppins
