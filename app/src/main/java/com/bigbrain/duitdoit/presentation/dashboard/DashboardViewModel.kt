@@ -51,6 +51,15 @@ class DashboardViewModel @Inject constructor(
     private val _categoryIncomes = MutableStateFlow<Map<String, Double>>(emptyMap())
     val categoryIncomes: StateFlow<Map<String, Double>> = _categoryIncomes.asStateFlow()
 
+    private val _latestByCategory = MutableStateFlow<List<CategorySummary>>(emptyList())
+    val latestByCategory: StateFlow<List<CategorySummary>> = _latestByCategory.asStateFlow()
+
+    data class CategorySummary(
+        val categoryName: String,
+        val categoryColor: String,
+        val transactionCount: Int,
+        val totalAmount: Double
+    )
 
     init {
         loadAccounts()
@@ -100,17 +109,37 @@ class DashboardViewModel @Inject constructor(
             transactions.collect { list ->
                 val expenses = mutableMapOf<String, Double>()
                 val incomes = mutableMapOf<String, Double>()
+                val categoryMap = mutableMapOf<Long, com.bigbrain.duitdoit.data.local.entity.CategoryEntity?>()
+                val countMap = mutableMapOf<String, Int>()
+
                 list.forEach { transaction ->
-                    val category = categoryRepository.getCategoryById(transaction.categoryId)
+                    val category = categoryMap.getOrPut(transaction.categoryId) {
+                        categoryRepository.getCategoryById(transaction.categoryId)
+                    }
                     val categoryName = category?.name ?: "Other"
                     if (transaction.type == "expense") {
                         expenses[categoryName] = (expenses[categoryName] ?: 0.0) + transaction.amount
+                        countMap[categoryName] = (countMap[categoryName] ?: 0) + 1
                     } else {
                         incomes[categoryName] = (incomes[categoryName] ?: 0.0) + transaction.amount
+                        countMap[categoryName] = (countMap[categoryName] ?: 0) + 1
                     }
                 }
+
                 _categoryExpenses.value = expenses
                 _categoryIncomes.value = incomes
+
+                val summaries = list.groupBy { it.categoryId }.map { (categoryId, transactions) ->
+                    val category = categoryMap[categoryId]
+                    CategorySummary(
+                        categoryName = category?.name ?: "Other",
+                        categoryColor = category?.color ?: "#6B7280",
+                        transactionCount = transactions.size,
+                        totalAmount = transactions.sumOf { it.amount }
+                    )
+                }.sortedByDescending { it.totalAmount }.take(5)
+
+                _latestByCategory.value = summaries
             }
         }
     }
