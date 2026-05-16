@@ -51,10 +51,14 @@ class DashboardViewModel @Inject constructor(
     private val _categoryIncomes = MutableStateFlow<Map<String, Double>>(emptyMap())
     val categoryIncomes: StateFlow<Map<String, Double>> = _categoryIncomes.asStateFlow()
 
+    private val _categoryTransactions = MutableStateFlow<List<com.bigbrain.duitdoit.data.local.entity.TransactionEntity>>(emptyList())
+    val categoryTransactions: StateFlow<List<com.bigbrain.duitdoit.data.local.entity.TransactionEntity>> = _categoryTransactions.asStateFlow()
+
     private val _latestByCategory = MutableStateFlow<List<CategorySummary>>(emptyList())
     val latestByCategory: StateFlow<List<CategorySummary>> = _latestByCategory.asStateFlow()
 
     data class CategorySummary(
+        val categoryId: Long,
         val categoryName: String,
         val categoryColor: String,
         val transactionCount: Int,
@@ -132,6 +136,7 @@ class DashboardViewModel @Inject constructor(
                 val summaries = list.groupBy { it.categoryId }.map { (categoryId, transactions) ->
                     val category = categoryMap[categoryId]
                     CategorySummary(
+                        categoryId = categoryId,
                         categoryName = category?.name ?: "Other",
                         categoryColor = category?.color ?: "#6B7280",
                         transactionCount = transactions.size,
@@ -159,7 +164,14 @@ class DashboardViewModel @Inject constructor(
         _selectedTab.value = tab
     }
 
-
+    fun loadCategoryTransactions(categoryId: Long) {
+        val (startDate, endDate) = getPeriodDateRange(_selectedPeriod.value)
+        viewModelScope.launch {
+            transactionRepository.getTransactionsByCategory(categoryId, startDate, endDate).collect {
+                _categoryTransactions.value = it
+            }
+        }
+    }
 
     fun loadTransactionSummary(startDate: Long, endDate: Long) {
         viewModelScope.launch {

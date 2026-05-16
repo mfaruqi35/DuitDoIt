@@ -25,6 +25,7 @@ import androidx.compose.foundation.background
 
 @Composable
 fun DashboardScreen(
+    onNavigateToCategoryDetail: (Long, String) -> Unit,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val accounts by viewModel.accounts.collectAsState()
@@ -58,7 +59,8 @@ fun DashboardScreen(
             categoryIncomes = categoryIncomes,
             onTabSelected = { viewModel.selectTab(it) },
             onPeriodSelected = { viewModel.selectPeriod(it) },
-            latestByCategory = latestByCategory
+            latestByCategory = latestByCategory,
+            onCategoryClick = onNavigateToCategoryDetail
         )
     }
 }
@@ -71,8 +73,9 @@ fun ChartCard(
     categoryExpenses: Map<String, Double>,
     categoryIncomes: Map<String, Double>,
     onTabSelected: (String) -> Unit,
+    onPeriodSelected: (String) -> Unit,
     latestByCategory: List<DashboardViewModel.CategorySummary>,
-    onPeriodSelected: (String) -> Unit
+    onCategoryClick: (Long, String) -> Unit
 ) {
     val periods = listOf("daily", "weekly", "monthly", "yearly")
     val periodLabels = mapOf(
@@ -190,7 +193,7 @@ fun ChartCard(
 
     LatestByCategorySection(
         categories = latestByCategory,
-        onCategoryClick = { }
+        onCategoryClick = onCategoryClick
     )
 }
 
@@ -303,7 +306,7 @@ fun DashboardHeader(
 @Composable
 fun LatestByCategorySection(
     categories: List<DashboardViewModel.CategorySummary>,
-    onCategoryClick: (String) -> Unit
+    onCategoryClick: (Long, String) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -332,7 +335,7 @@ fun LatestByCategorySection(
                 categories.forEach { summary ->
                     CategorySummaryItem(
                         summary = summary,
-                        onClick = { onCategoryClick(summary.categoryName) }
+                        onClick = { onCategoryClick(summary.categoryId, summary.categoryName) }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                 }

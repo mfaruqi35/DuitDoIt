@@ -16,10 +16,14 @@ import com.bigbrain.duitdoit.presentation.extras.ExtrasScreen
 import com.bigbrain.duitdoit.presentation.extras.RegularPaymentListScreen
 import com.bigbrain.duitdoit.presentation.extras.WishlistListScreen
 import com.bigbrain.duitdoit.presentation.analytics.TransactionDetailScreen
+import com.bigbrain.duitdoit.presentation.dashboard.CategoryDetailScreen
 
 
 sealed class Screen(val route: String){
     object Dashboard : Screen("dashboard")
+    object CategoryDetail : Screen("category_detail/{categoryId}/{categoryName}") {
+        fun createRoute(categoryId: Long, categoryName: String) = "category_detail/$categoryId/$categoryName"
+    }
     object Analytics : Screen("analytics")
     object Accounts : Screen("accounts")
     object Transfer : Screen("transfer")
@@ -42,7 +46,25 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
         modifier = modifier
     ) {
         composable(Screen.Dashboard.route) {
-            DashboardScreen()
+            DashboardScreen(
+                onNavigateToCategoryDetail = { id, name ->
+                    navController.navigate(Screen.CategoryDetail.createRoute(id, name))
+                }
+            )
+        }
+        composable("category_detail/{categoryId}/{categoryName}") { backStackEntry ->
+            val categoryId = backStackEntry.arguments?.getString("categoryId")?.toLongOrNull()
+            val categoryName = backStackEntry.arguments?.getString("categoryName") ?: ""
+            categoryId?.let {
+                CategoryDetailScreen(
+                    categoryId = it,
+                    categoryName = categoryName,
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToTransactionDetail = { id ->
+                        navController.navigate(Screen.TransactionDetail.createRoute(id.toString()))
+                    }
+                )
+            }
         }
         composable(Screen.Analytics.route) {
             TransactionScreen(
