@@ -19,6 +19,8 @@ sealed class Screen(val route: String){
     object Extras : Screen("extras")
     object AddTransaction : Screen("addTransaction")
     object AddAccount : Screen("add_account")
+    object WishlistList : Screen("wishlist_list")
+    object RegularPaymentList : Screen("regular_payment_list")
 }
 
 @Composable
@@ -40,7 +42,8 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
             )
         }
         composable(Screen.Extras.route) {
-            ExtrasScreen()
+            ExtrasScreen(onNavigateToWishlistList = { navController.navigate(Screen.WishlistList.route) },
+                onNavigateToRegularPaymentList = { navController.navigate(Screen.RegularPaymentList.route) })
         }
         composable(Screen.AddTransaction.route) {
             // AddTransactionScreen()
