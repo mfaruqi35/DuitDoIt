@@ -31,6 +31,7 @@ fun ExtrasScreen(
     val regularPayments by viewModel.regularPayments.collectAsState()
     val totalMonthlyPayments by viewModel.totalMonthlyPayments.collectAsState()
     val totalWishlistCount by viewModel.totalWishlistCount.collectAsState()
+    val accounts by viewModel.accounts.collectAsState()
 
     Scaffold(
         topBar = {
@@ -169,7 +170,7 @@ fun ExtrasScreen(
                     } else {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             wishlistItems.take(3).forEach { item ->
-                                WishlistItemCard(item = item)
+                                WishlistItemCard(item = item, accounts = accounts)
                             }
                         }
                     }
@@ -214,12 +215,16 @@ fun RegularPaymentCard(payment: RegularPaymentEntity) {
 }
 
 @Composable
-fun WishlistItemCard(item: WishlistEntity) {
+fun WishlistItemCard(item: WishlistEntity, accounts: List<com.bigbrain.duitdoit.data.local.entity.AccountEntity>) {
     val priorityColor = when (item.priority) {
         "high" -> PriorityHigh
         "medium" -> PriorityMedium
         else -> PriorityLow
     }
+    val account = accounts.find { it.id == item.accountId }
+    val progress = if (account != null && item.targetPrice > 0) {
+        (account.balance / item.targetPrice).coerceIn(0.0, 1.0).toFloat()
+    } else 0f
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -248,7 +253,7 @@ fun WishlistItemCard(item: WishlistEntity) {
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 LinearProgressIndicator(
-                    progress = { 0f },
+                    progress = { progress },
                     modifier = Modifier.fillMaxWidth(),
                     color = priorityColor,
                     trackColor = priorityColor.copy(alpha = 0.2f)

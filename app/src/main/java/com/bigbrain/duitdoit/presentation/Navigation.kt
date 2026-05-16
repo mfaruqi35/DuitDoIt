@@ -13,6 +13,7 @@ import com.bigbrain.duitdoit.presentation.analytics.TransactionScreen
 import com.bigbrain.duitdoit.presentation.dashboard.DashboardScreen
 import com.bigbrain.duitdoit.presentation.extras.ExtrasScreen
 import com.bigbrain.duitdoit.presentation.extras.RegularPaymentListScreen
+import com.bigbrain.duitdoit.presentation.extras.WishlistListScreen
 
 sealed class Screen(val route: String){
     object Dashboard : Screen("dashboard")
@@ -48,7 +49,9 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
                 onNavigateToRegularPaymentList = { navController.navigate(Screen.RegularPaymentList.route) })
         }
         composable(Screen.WishlistList.route) {
-            Text("Wishlist screen")
+            WishlistListScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
         composable(Screen.RegularPaymentList.route) {
             RegularPaymentListScreen(

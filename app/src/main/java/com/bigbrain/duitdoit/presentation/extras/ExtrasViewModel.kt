@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bigbrain.duitdoit.data.local.entity.RegularPaymentEntity
 import com.bigbrain.duitdoit.data.local.entity.WishlistEntity
+import com.bigbrain.duitdoit.data.repository.AccountRepository
 import com.bigbrain.duitdoit.data.repository.RegularPaymentRepository
 import com.bigbrain.duitdoit.data.repository.WishlistRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,7 +17,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ExtrasViewModel @Inject constructor(
     private val wishlistRepository: WishlistRepository,
-    private val regularPaymentRepository: RegularPaymentRepository
+    private val regularPaymentRepository: RegularPaymentRepository,
+    private val accountRepository: AccountRepository
 ) : ViewModel() {
 
     private val _wishlistItems = MutableStateFlow<List<WishlistEntity>>(emptyList())
@@ -31,9 +33,17 @@ class ExtrasViewModel @Inject constructor(
     private val _totalWishlistCount = MutableStateFlow(0)
     val totalWishlistCount: StateFlow<Int> = _totalWishlistCount.asStateFlow()
 
+    private val _totalTargetPrice = MutableStateFlow(0.0)
+    val totalTargetPrice: StateFlow<Double> = _totalTargetPrice.asStateFlow()
+
+    private val _accounts = MutableStateFlow<List<com.bigbrain.duitdoit.data.local.entity.AccountEntity>>(emptyList())
+    val accounts: StateFlow<List<com.bigbrain.duitdoit.data.local.entity.AccountEntity>> = _accounts.asStateFlow()
+
     init {
         loadWishlist()
         loadRegularPayments()
+        loadAccounts()
+        loadTotalTargetPrice()
     }
 
     private fun loadWishlist() {
@@ -54,6 +64,21 @@ class ExtrasViewModel @Inject constructor(
         viewModelScope.launch {
             regularPaymentRepository.getTotalMonthlyPayments().collect {
                 _totalMonthlyPayments.value = it ?: 0.0
+            }
+        }
+    }
+    private fun loadAccounts() {
+        viewModelScope.launch {
+            accountRepository.getAllAccounts().collect {
+                _accounts.value = it
+            }
+        }
+    }
+
+    private fun loadTotalTargetPrice() {
+        viewModelScope.launch {
+            wishlistRepository.getTotalTargetPrice().collect {
+                _totalTargetPrice.value = it ?: 0.0
             }
         }
     }
