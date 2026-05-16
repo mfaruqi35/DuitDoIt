@@ -18,17 +18,20 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.bigbrain.duitdoit.R
 import com.bigbrain.duitdoit.ui.theme.*
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.foundation.Canvas
 
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val accounts by viewModel.accounts.collectAsState()
-    val totalBalance by viewModel.totalBalance.collectAsState()
     val selectedAccountId by viewModel.selectedAccountId.collectAsState()
     val selectedPeriod by viewModel.selectedPeriod.collectAsState()
     val selectedTab by viewModel.selectedTab.collectAsState()
     val displayBalance by viewModel.displayBalance.collectAsState()
+    val categoryExpenses by viewModel.categoryExpenses.collectAsState()
+    val categoryIncomes by viewModel.categoryIncomes.collectAsState()
 
     Column(
         modifier = Modifier
@@ -48,6 +51,8 @@ fun DashboardScreen(
         ChartCard(
             selectedTab = selectedTab,
             selectedPeriod = selectedPeriod,
+            categoryExpenses = categoryExpenses,
+            categoryIncomes = categoryIncomes,
             onTabSelected = { viewModel.selectTab(it) },
             onPeriodSelected = { viewModel.selectPeriod(it) }
         )
@@ -59,11 +64,34 @@ fun DashboardScreen(
 fun ChartCard(
     selectedTab: String,
     selectedPeriod: String,
+    categoryExpenses: Map<String, Double>,
+    categoryIncomes: Map<String, Double>,
     onTabSelected: (String) -> Unit,
     onPeriodSelected: (String) -> Unit
 ) {
     val periods = listOf("daily", "weekly", "monthly", "yearly")
-
+    val periodLabels = mapOf(
+        "daily" to "Day",
+        "weekly" to "Week",
+        "monthly" to "Month",
+        "yearly" to "Year"
+    )
+    val data = if (selectedTab == "expense") categoryExpenses else categoryIncomes
+    val total = data.values.sum()
+    val categoryColors = mapOf(
+        "Food & Drinks" to CategoryFoodDrinks,
+        "Transport" to CategoryTransport,
+        "Shopping" to CategoryShopping,
+        "Fun" to CategoryFun,
+        "Health" to CategoryHealth,
+        "Education" to CategoryEducation,
+        "Bills" to CategoryBills,
+        "Salary" to CategorySalary,
+        "Freelance" to CategoryFreelance,
+        "Business" to CategoryBusiness,
+        "Gift" to CategoryGift,
+        "Other" to CategoryOther
+    )
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -110,7 +138,7 @@ fun ChartCard(
                         onClick = { onPeriodSelected(period) },
                         label = {
                             Text(
-                                period.replaceFirstChar { it.uppercase() }.take(1) + period.drop(1),
+                                periodLabels[period] ?: period,
                                 fontFamily = Poppins
                             )
                         },
@@ -122,20 +150,72 @@ fun ChartCard(
                     )
                 }
             }
-
-            // Placeholder donut chart
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Donut Chart",
-                    fontFamily = Poppins,
-                    color = TextSecondary
-                )
+            if (data.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No data for this period",
+                        fontFamily = Poppins,
+                        color = TextSecondary
+                    )
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    DonutChart(
+                        data = data,
+                        categoryColors = categoryColors,
+                        total = total
+                    )
+                }
             }
+        }
+    }
+}
+
+@Composable
+fun DonutChart(
+    data: Map<String, Double>,
+    categoryColors: Map<String, Color>,
+    total: Double
+) {
+    val sweepAngles = data.map { (category, value) ->
+        category to (value / total * 360f).toFloat()
+    }
+
+    Box(contentAlignment = Alignment.Center) {
+        Canvas(modifier = Modifier.size(180.dp)) {
+            var startAngle = -90f
+            sweepAngles.forEach { (category, sweep) ->
+                drawArc(
+                    color = categoryColors[category] ?: CategoryOther,
+                    startAngle = startAngle,
+                    sweepAngle = sweep,
+                    useCenter = false,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(
+                        width = 40.dp.toPx()
+                    )
+                )
+                startAngle += sweep
+            }
+        }
+
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = formatCurrency(total),
+                fontFamily = Poppins,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 16.sp,
+                color = TextPrimary
+            )
         }
     }
 }

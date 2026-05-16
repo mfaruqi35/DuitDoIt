@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.bigbrain.duitdoit.data.local.entity.AccountEntity
 import com.bigbrain.duitdoit.data.repository.AccountRepository
 import com.bigbrain.duitdoit.data.repository.TransactionRepository
+import com.bigbrain.duitdoit.data.repository.CategoryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +17,8 @@ import javax.inject.Inject
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val accountRepository: AccountRepository,
-    private val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionRepository,
+    private val categoryRepository: CategoryRepository
 ) : ViewModel() {
 
     private val _accounts = MutableStateFlow<List<AccountEntity>>(emptyList())
@@ -43,10 +45,19 @@ class DashboardViewModel @Inject constructor(
     private val _displayBalance = MutableStateFlow(0.0)
     val displayBalance: StateFlow<Double> = _displayBalance.asStateFlow()
 
+    private val _categoryExpenses = MutableStateFlow<Map<String, Double>>(emptyMap())
+    val categoryExpenses: StateFlow<Map<String, Double>> = _categoryExpenses.asStateFlow()
+
+    private val _categoryIncomes = MutableStateFlow<Map<String, Double>>(emptyMap())
+    val categoryIncomes: StateFlow<Map<String, Double>> = _categoryIncomes.asStateFlow()
+
+
     init {
         loadAccounts()
         loadTotalBalance()
         updateDisplayBalance()
+        val (start, end) = getPeriodDateRange("monthly")
+        loadCategoryData(start, end)
     }
 
     private fun loadAccounts() {
@@ -78,6 +89,32 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
+    private fun loadCategoryData(startDate: Long, endDate: Long) {
+        viewModelScope.launch {
+            val accountId = _selectedAccountId.value
+            val transactions = if (accountId == null) {
+                transactionRepository.getTransactionsByPeriod(startDate, endDate)
+            } else {
+                transactionRepository.getTransactionsByAccountAndPeriod(accountId, startDate, endDate)
+            }
+            transactions.collect { list ->
+                val expenses = mutableMapOf<String, Double>()
+                val incomes = mutableMapOf<String, Double>()
+                list.forEach { transaction ->
+                    val category = categoryRepository.getCategoryById(transaction.categoryId)
+                    val categoryName = category?.name ?: "Other"
+                    if (transaction.type == "expense") {
+                        expenses[categoryName] = (expenses[categoryName] ?: 0.0) + transaction.amount
+                    } else {
+                        incomes[categoryName] = (incomes[categoryName] ?: 0.0) + transaction.amount
+                    }
+                }
+                _categoryExpenses.value = expenses
+                _categoryIncomes.value = incomes
+            }
+        }
+    }
+
     fun selectAccount(accountId: Long?) {
         _selectedAccountId.value = accountId
         updateDisplayBalance()
@@ -85,11 +122,14 @@ class DashboardViewModel @Inject constructor(
 
     fun selectPeriod(period: String) {
         _selectedPeriod.value = period
+        val (start, end) = getPeriodDateRange(period)
+        loadCategoryData(start, end)
     }
 
     fun selectTab(tab: String) {
         _selectedTab.value = tab
     }
+
 
 
     fun loadTransactionSummary(startDate: Long, endDate: Long) {
@@ -110,5 +150,34 @@ class DashboardViewModel @Inject constructor(
                 _totalExpense.value = it ?: 0.0
             }
         }
+    }
+
+    fun getPeriodDateRange(period: String): Pair<Long, Long> {
+        val calendar = java.util.Calendar.getInstance()
+        val endDate = calendar.timeInMillis
+        val startDate = when (period) {
+            "daily" -> {
+                calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
+                calendar.set(java.util.Calendar.MINUTE, 0)
+                calendar.set(java.util.Calendar.SECOND, 0)
+                calendar.timeInMillis
+            }
+            "weekly" -> {
+                calendar.add(java.util.Calendar.DAY_OF_YEAR, -7)
+                calendar.timeInMillis
+            }
+            "monthly" -> {
+                calendar.set(java.util.Calendar.DAY_OF_MONTH, 1)
+                calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
+                calendar.timeInMillis
+            }
+            "yearly" -> {
+                calendar.set(java.util.Calendar.DAY_OF_YEAR, 1)
+                calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
+                calendar.timeInMillis
+            }
+            else -> endDate - (30L * 24 * 60 * 60 * 1000)
+        }
+        return Pair(startDate, endDate)
     }
 }
