@@ -69,7 +69,10 @@ fun AccountsScreen(
 
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(accounts) { account ->
-                    AccountItem(account = account)
+                    AccountItem(
+                        account = account,
+                        onDelete = { viewModel.deleteAccount(account) }
+                    )
                 }
             }
         }
@@ -77,7 +80,35 @@ fun AccountsScreen(
 }
 
 @Composable
-fun AccountItem(account: AccountEntity) {
+fun AccountItem(
+    account: AccountEntity,
+    onDelete: () -> Unit
+) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete Account", fontFamily = Poppins)},
+            text = { Text("Are you sure you want to delete ${account.name}?", fontFamily = Poppins) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onDelete()
+                        showDeleteDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Expense)
+                ) {
+                    Text("Delete", fontFamily = Poppins)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false}) {
+                    Text("Cancel", fontFamily = Poppins)
+                }
+            }
+        )
+    }
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -96,14 +127,22 @@ fun AccountItem(account: AccountEntity) {
                 fontWeight = FontWeight.Medium,
                 fontSize = 16.sp
             )
-            Text(
-                text = formatCurrency(account.balance),
-                fontFamily = Poppins,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 16.sp,
-                color = Primary
-            )
-
+            Row(verticalAlignment = Alignment.CenterVertically){
+                Text(
+                    text = formatCurrency(account.balance),
+                    fontFamily = Poppins,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp,
+                    color = Primary
+                )
+                IconButton(onClick = { showDeleteDialog = true }) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_other),
+                        contentDescription = "Delete Account",
+                        tint = Expense
+                    )
+                }
+            }
         }
     }
 }

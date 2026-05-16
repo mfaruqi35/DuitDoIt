@@ -46,6 +46,11 @@ class AccountsViewModel @Inject constructor(
             )
         }
     }
+    fun deleteAccount(account: AccountEntity) {
+        viewModelScope.launch {
+            accountRepository.deleteAccount(account)
+        }
+    }
     fun transfer(
         fromAccountId: Long,
         toAccountId: Long,
