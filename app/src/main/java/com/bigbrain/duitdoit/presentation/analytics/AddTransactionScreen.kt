@@ -9,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -79,7 +80,7 @@ fun AddTransactionScreen(
                             selectedCategoryId = null
                         },
                         label = { Text(type.replaceFirstChar { it.uppercase() }, fontFamily = Poppins) },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).testTag("chip_type_$type"),
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = Primary,
                             selectedLabelColor = Color.White
@@ -100,7 +101,7 @@ fun AddTransactionScreen(
                 value = amount,
                 onValueChange = { amount = it },
                 label = { Text("Amount") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("field_amount"),
                 shape = RoundedCornerShape(12.dp),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 prefix = { Text("Rp ") }
@@ -118,7 +119,8 @@ fun AddTransactionScreen(
                     label = { Text("Account") },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .menuAnchor(),
+                        .menuAnchor()
+                        .testTag("dropdown_account"),
                     shape = RoundedCornerShape(12.dp),
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = accountExpanded) }
                 )
@@ -151,7 +153,7 @@ fun AddTransactionScreen(
                 value = note,
                 onValueChange = { note = it },
                 label = { Text("Note (optional)") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("field_note"),
                 shape = RoundedCornerShape(12.dp)
             )
 
@@ -173,7 +175,8 @@ fun AddTransactionScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp),
+                    .height(52.dp)
+                    .testTag("btn_save_transactions"),
                 shape = RoundedCornerShape(100.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Primary)
             ) {
@@ -198,6 +201,7 @@ fun CategoryGrid(
                         selected = selectedCategoryId == category.id,
                         onClick = { onCategorySelected(category.id) },
                         label = { Text(category.name, fontFamily = Poppins) },
+                        modifier = Modifier.testTag("chip_category_${category.name}"),
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = Primary,
                             selectedLabelColor = Color.White

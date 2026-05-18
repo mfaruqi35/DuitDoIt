@@ -9,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -69,6 +70,7 @@ fun TransactionDetailScreen(
                             viewModel.deleteTransaction(it) { onNavigateBack() }
                         }
                     },
+                    modifier = Modifier.testTag("btn_confirm_delete"),
                     colors = ButtonDefaults.buttonColors(containerColor = Expense)
                 ) {
                     Text("Delete", fontFamily = Poppins)
@@ -95,9 +97,9 @@ fun TransactionDetailScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { showDeleteDialog = true }) {
+                    IconButton(onClick = { showDeleteDialog = true }, modifier = Modifier.testTag("btn_delete_transactions")) {
                         Icon(
-                            painter = painterResource(id = R.drawable.ic_other),
+                            painter = painterResource(id = R.drawable.ic_delete),
                             contentDescription = "Delete",
                             tint = Color.White
                         )
@@ -226,7 +228,8 @@ fun TransactionDetailScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp),
+                    .height(52.dp)
+                    .testTag("btn_save_changes"),
                 shape = RoundedCornerShape(100.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Primary)
             ) {

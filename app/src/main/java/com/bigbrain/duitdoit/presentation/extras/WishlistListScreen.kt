@@ -236,7 +236,7 @@ fun WishlistListItem(
                 )
                 IconButton(onClick = onDelete) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_other),
+                        painter = painterResource(id = R.drawable.ic_delete),
                         contentDescription = "Delete",
                         tint = Expense
                     )
