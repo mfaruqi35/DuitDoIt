@@ -61,7 +61,7 @@ fun DashboardScreen(
                     )
                     IconButton(onClick = { expanded = true }) {
                         Icon(
-                            painter = painterResource(id = R.drawable.ic_next),
+                            painter = painterResource(id = R.drawable.ic_def_dropdown),
                             contentDescription = "Select Account",
                             tint = Color.White
                         )
@@ -223,29 +223,46 @@ fun ChartCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onPreviousPeriod) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_prev),
-                        contentDescription = "Previous",
-                        tint = TextSecondary
-                    )
+                Row{
+                    IconButton(onClick = onPreviousPeriod) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_prev),
+                            contentDescription = "Previous",
+                            tint = TextSecondary
+                        )
+                    }
+                    if (periodOffset > 0){
+                        IconButton(onClick = onResetPeriod) {
+                            Icon(
+                                painter= painterResource(id = R.drawable.ic_reset_left),
+                                contentDescription = "Reset",
+                                tint = Primary
+                            )
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.size(48.dp))
+                    }
                 }
                 Text(
                     text = periodLabel,
                     fontFamily = Poppins,
                     fontSize = 14.sp,
                     color = TextPrimary,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+
                 )
                 Row {
-                    if (periodOffset != 0){
+                    if (periodOffset < 0){
                         IconButton(onClick = onResetPeriod) {
                             Icon(
-                                painter= painterResource(id = R.drawable.ic_next),
+                                painter= painterResource(id = R.drawable.ic_reset2),
                                 contentDescription = "Reset",
                                 tint = Primary
                             )
                         }
+                    } else {
+                        Spacer(modifier = Modifier.size(48.dp))
                     }
                     IconButton(onClick = onNextPeriod) {
                         Icon(
