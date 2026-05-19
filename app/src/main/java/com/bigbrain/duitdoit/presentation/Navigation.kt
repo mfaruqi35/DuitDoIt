@@ -1,5 +1,7 @@
 package com.bigbrain.duitdoit.presentation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
@@ -43,7 +45,31 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
     NavHost(
         navController = navController,
         startDestination = Screen.Dashboard.route,
-        modifier = modifier
+        modifier = modifier,
+        enterTransition = {
+            slideIntoContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                animationSpec = tween(300)
+            )
+        },
+        exitTransition = {
+            slideOutOfContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                animationSpec = tween(300)
+            )
+        },
+        popEnterTransition = {
+            slideIntoContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                animationSpec = tween(300)
+            )
+        },
+        popExitTransition = {
+            slideOutOfContainer(
+                towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                animationSpec = tween(300)
+            )
+        }
     ) {
         composable(Screen.Dashboard.route) {
             DashboardScreen(

@@ -54,8 +54,21 @@ fun MainScreen() {
         BottomNavItem(Screen.Accounts.route, "Accounts", R.drawable.ic_nav_def_account, R.drawable.ic_nav_fill_accounts),
         BottomNavItem(Screen.Extras.route, "Extras", R.drawable.ic_nav_def_extras, R.drawable.ic_nav_fill_extras),
     )
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    val showBottomBar = currentRoute in listOf(
+        Screen.Dashboard.route,
+        Screen.Analytics.route,
+        Screen.Accounts.route,
+        Screen.Extras.route
+    )
+
     Scaffold(
-        bottomBar = { BottomNavBares(navController, bottomNavItems) }
+        bottomBar = {
+            if (showBottomBar) {
+                BottomNavBares(navController, bottomNavItems)
+            } }
     ) { innerPadding ->
         AppNavHost(
             navController = navController,
