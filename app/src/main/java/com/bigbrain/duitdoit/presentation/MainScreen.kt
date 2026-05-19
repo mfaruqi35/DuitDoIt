@@ -20,6 +20,7 @@ import com.bigbrain.duitdoit.R
 import com.bigbrain.duitdoit.ui.theme.Background
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.bigbrain.duitdoit.ui.theme.Primary
 import com.bigbrain.duitdoit.ui.theme.Secondary
@@ -76,6 +77,7 @@ fun BottomNavBares(navController: NavHostController, items: List<BottomNavItem>)
                     )
                 },
                 label = { Text(text = item.label) },
+                modifier = Modifier.testTag("nav_${item.route}"),
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = Primary,
                     selectedTextColor = Primary,
@@ -100,7 +102,8 @@ fun BottomNavBares(navController: NavHostController, items: List<BottomNavItem>)
                         .padding(12.dp)
                 )
             },
-            label = {}
+            label = {},
+            modifier = Modifier.testTag("nav_add_transaction")
         )
 
         items.subList(2, 4).forEach { item ->
