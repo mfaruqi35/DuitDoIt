@@ -7,6 +7,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -73,7 +74,8 @@ fun TransferScreen(
                     label = { Text("From") },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .menuAnchor(),
+                        .menuAnchor()
+                        .testTag("dropdown_from_account"),
                     shape = RoundedCornerShape(12.dp),
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = fromAccountExpanded)
@@ -112,7 +114,8 @@ fun TransferScreen(
                     label = { Text("To") },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .menuAnchor(),
+                        .menuAnchor()
+                        .testTag("dropdown_to_account"),
                     shape = RoundedCornerShape(12.dp),
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = toAccountExpanded)
@@ -139,7 +142,7 @@ fun TransferScreen(
                 value = amount,
                 onValueChange = { amount = it },
                 label = { Text("Amount") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("field_transfer_amount"),
                 shape = RoundedCornerShape(12.dp),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 prefix = { Text("Rp ") }
@@ -150,7 +153,7 @@ fun TransferScreen(
                 value = note,
                 onValueChange = { note = it },
                 label = { Text("Note (optional)") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("field_transfer_note"),
                 shape = RoundedCornerShape(12.dp)
             )
 
@@ -174,7 +177,8 @@ fun TransferScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp),
+                    .height(52.dp)
+                    .testTag("btn_confirm_transfer"),
                 shape = RoundedCornerShape(100.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Primary)
             ) {
