@@ -6,6 +6,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -62,8 +63,17 @@ fun AddAccountScreen(
                 value = name,
                 onValueChange = { name = it },
                 label = { Text("Account Name") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("field_account_name"),
                 shape = RoundedCornerShape(12.dp)
+            )
+            OutlinedTextField(
+                value = balance,
+                onValueChange = { balance = it },
+                label = { Text("Initial Balance") },
+                modifier = Modifier.fillMaxWidth().testTag("field_account_balance"),
+                shape = RoundedCornerShape(12.dp),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                prefix = { Text("Rp") }
             )
             Text("Select Icon", fontFamily = Poppins, color = TextSecondary)
             Row(
@@ -72,7 +82,7 @@ fun AddAccountScreen(
                 icons.forEach { (iconName, iconRes) ->
                     IconButton(
                         onClick = { selectedIcon = iconName },
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier.size(48.dp).testTag("btn_icon_$iconName")
                     ) {
                         Icon(
                             painter = painterResource(id = iconRes),
@@ -98,7 +108,8 @@ fun AddAccountScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp),
+                    .height(52.dp)
+                    .testTag("btn_save_account"),
                 shape = RoundedCornerShape(100.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Primary)
             ) {
