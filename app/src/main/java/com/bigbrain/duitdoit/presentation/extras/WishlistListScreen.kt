@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -137,12 +138,14 @@ fun WishlistListScreen(
                 }
             }
 
+            // Add wishlist button
             Button(
                 onClick = { showAddDialog = true },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
-                    .height(52.dp),
+                    .height(52.dp)
+                    .testTag("btn_add_wishlist"),
                 shape = RoundedCornerShape(100.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Primary)
             ) {
@@ -185,7 +188,7 @@ fun WishlistListItem(
     } else 0f
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().testTag("wishlist_item_${item.id}"),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
@@ -234,7 +237,7 @@ fun WishlistListItem(
                     fontSize = 12.sp,
                     color = priorityColor
                 )
-                IconButton(onClick = onDelete) {
+                IconButton(onClick = onDelete, modifier = Modifier.testTag("btn_delete_wishlist_${item.name}")) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_delete),
                         contentDescription = "Delete",
@@ -266,18 +269,20 @@ fun AddWishlistDialog(
         title = { Text("Add Wishlist", fontFamily = Poppins) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                // Name field
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text("Item name") },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().testTag("field_wishlist_name"),
                     shape = RoundedCornerShape(12.dp)
                 )
+                // Target price field
                 OutlinedTextField(
                     value = targetPrice,
                     onValueChange = { targetPrice = it },
                     label = { Text("Target price") },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().testTag("field_wishlist_price"),
                     shape = RoundedCornerShape(12.dp),
                     prefix = { Text("Rp ") }
                 )
@@ -293,6 +298,7 @@ fun AddWishlistDialog(
                                     fontFamily = Poppins
                                 )
                             },
+                            modifier = Modifier.testTag("chip_priority_$p"),
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = when (p) {
                                     "high" -> PriorityHigh
@@ -350,6 +356,7 @@ fun AddWishlistDialog(
                         )
                     }
                 },
+                modifier = Modifier.testTag("btn_save_wishlist"),
                 colors = ButtonDefaults.buttonColors(containerColor = Primary)
             ) {
                 Text("Save", fontFamily = Poppins)
