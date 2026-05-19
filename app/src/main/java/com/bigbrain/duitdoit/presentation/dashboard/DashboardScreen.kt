@@ -52,7 +52,7 @@ fun DashboardScreen(
             content = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = selectedAccount?.name ?: "All Accounts",
+                        text = selectedAccount?.name ?: "Total",
                         color = Color.White.copy(alpha = 0.8f),
                         fontSize = 14.sp,
                         fontFamily = Poppins
@@ -69,7 +69,7 @@ fun DashboardScreen(
                         onDismissRequest = { expanded = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("All Accounts") },
+                            text = { Text("Total") },
                             onClick = {
                                 viewModel.selectAccount(null)
                                 expanded = false

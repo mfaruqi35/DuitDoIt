@@ -7,15 +7,20 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.bigbrain.duitdoit.R
 import com.bigbrain.duitdoit.ui.theme.*
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,6 +44,8 @@ fun AddTransactionScreen(
     val selectedCategory = categories.find { it.id == selectedCategoryId }
     val errorMessage by viewModel.errorMessage.collectAsState()
 
+    var showDatePicker by remember { mutableStateOf(false) }
+    val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH) }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -151,6 +158,89 @@ fun AddTransactionScreen(
                 selectedCategoryId = selectedCategoryId,
                 onCategorySelected = { selectedCategoryId = it }
             )
+
+            // Date Selector
+            Text("Date", fontFamily = Poppins, color = TextSecondary)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val today = System.currentTimeMillis()
+                val yesterday = today - 24 * 60 * 60 * 1000
+                val tomorrow = today + 24 * 60 * 60 * 1000
+
+                val quickDates = listOf(
+                    "Today" to today,
+                    "Yesterday" to yesterday,
+                    "Tomorrow" to tomorrow
+                )
+
+                quickDates.forEach { (label, date) ->
+                    val isSelected = dateFormatter.format(Date(selectedDate)) == dateFormatter.format(Date(date))
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = { selectedDate = date },
+                        label = { Text(label, fontFamily = Poppins) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = Primary,
+                            selectedLabelColor = Color.White
+                        )
+                    )
+                }
+
+                IconButton(onClick = { showDatePicker = true }) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_calendar),
+                        contentDescription = "Pick Date",
+                        tint = Primary
+                    )
+                }
+            }
+            // Tampilkan tanggal yang dipilih kalau bukan yesterday/today/tomorrow
+            val today = System.currentTimeMillis()
+            val yesterday = today - 24 * 60 * 60 * 1000
+            val tomorrow = today + 24 * 60 * 60 * 1000
+            val isQuickDate = listOf(today, yesterday, tomorrow).any {
+                dateFormatter.format(Date(selectedDate)) == dateFormatter.format(Date(it))
+            }
+            if (!isQuickDate) {
+                Text(
+                    text = dateFormatter.format(Date(selectedDate)),
+                    fontFamily = Poppins,
+                    color = Primary,
+                    fontSize = 14.sp
+                )
+            }
+
+            if (showDatePicker) {
+                val datePickerState = rememberDatePickerState(
+                    initialSelectedDateMillis = selectedDate
+                )
+                DatePickerDialog(
+                    onDismissRequest = { showDatePicker = false },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                datePickerState.selectedDateMillis?.let {
+                                    selectedDate = it
+                                }
+                                showDatePicker = false
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Primary)
+                        ) {
+                            Text("OK", fontFamily = Poppins)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDatePicker = false }) {
+                            Text("Cancel", fontFamily = Poppins)
+                        }
+                    }
+                ) {
+                    DatePicker(state = datePickerState)
+                }
+            }
 
             // Note
             OutlinedTextField(
