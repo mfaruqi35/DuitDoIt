@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -123,7 +124,8 @@ fun RegularPaymentListScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
-                    .height(52.dp),
+                    .height(52.dp)
+                    .testTag("btn_add_regular_payment"),
                 shape = RoundedCornerShape(100.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Primary)
             ) {
@@ -157,7 +159,7 @@ fun RegularPaymentListItem(
 ) {
     val sdf = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().testTag("regular_payment_item_${payment.name}"),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
@@ -188,7 +190,7 @@ fun RegularPaymentListItem(
                     color = TextSecondary
                 )
             }
-            IconButton(onClick = onDelete) {
+            IconButton(onClick = onDelete, modifier = Modifier.testTag("regular_payment_item_${payment.name}")) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_delete),
                     contentDescription = "Delete",
@@ -217,14 +219,14 @@ fun AddRegularPaymentDialog(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text("Name") },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().testTag("field_regular_payment_name"),
                     shape = RoundedCornerShape(12.dp)
                 )
                 OutlinedTextField(
                     value = amount,
                     onValueChange = { amount = it },
                     label = { Text("Amount") },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().testTag("field_regular_payment_amount"),
                     shape = RoundedCornerShape(12.dp),
                     prefix = { Text("Rp ") }
                 )
@@ -240,6 +242,7 @@ fun AddRegularPaymentDialog(
                                     fontFamily = Poppins
                                 )
                             },
+                            modifier = Modifier.testTag("chip_billing_cycle_$cycle"),
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = Primary,
                                 selectedLabelColor = Color.White
@@ -265,6 +268,7 @@ fun AddRegularPaymentDialog(
                         onConfirm(name, amount.toDoubleOrNull() ?: 0.0, billingCycle, nextRenewal)
                     }
                 },
+                modifier = Modifier.testTag("btn_save_regular_payment"),
                 colors = ButtonDefaults.buttonColors(containerColor = Primary)
             ) {
                 Text("Save", fontFamily = Poppins)
