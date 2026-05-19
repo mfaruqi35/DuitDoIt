@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.bigbrain.duitdoit.data.local.entity.RegularPaymentEntity
 import com.bigbrain.duitdoit.data.local.entity.WishlistEntity
+import com.bigbrain.duitdoit.presentation.components.AppHeader
 import com.bigbrain.duitdoit.presentation.dashboard.formatCurrency
 import com.bigbrain.duitdoit.ui.theme.*
 
@@ -35,13 +36,7 @@ fun ExtrasScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Extras", fontFamily = Poppins) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Primary,
-                    titleContentColor = Color.White
-                )
-            )
+            AppHeader(title = "Extras")
         }
     ) { innerPadding ->
         LazyColumn(

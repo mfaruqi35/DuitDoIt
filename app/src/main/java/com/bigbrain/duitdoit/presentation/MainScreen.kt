@@ -1,6 +1,15 @@
 package com.bigbrain.duitdoit.presentation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,9 +28,12 @@ import androidx.navigation.compose.rememberNavController
 import com.bigbrain.duitdoit.R
 import com.bigbrain.duitdoit.ui.theme.Background
 import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.bigbrain.duitdoit.ui.theme.Poppins
 import com.bigbrain.duitdoit.ui.theme.Primary
 import com.bigbrain.duitdoit.ui.theme.Secondary
 import com.bigbrain.duitdoit.ui.theme.TextSecondary
@@ -57,82 +69,122 @@ fun BottomNavBares(navController: NavHostController, items: List<BottomNavItem>)
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    NavigationBar (containerColor= Background){
-        items.subList(0, 2).forEach { item ->
-            NavigationBarItem(
-                selected = currentRoute == item.route,
-                onClick = {
-                    navController.navigate(item.route) {
-                        popUpTo(navController.graph.startDestinationId) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                icon = {
-                    Icon(
-                        painter = painterResource(
-                            id = if (currentRoute == item.route) item.iconFill else item.iconDefault
-                        ),
-                        contentDescription = item.label
-                    )
-                },
-                label = { Text(text = item.label) },
-                modifier = Modifier.testTag("nav_${item.route}"),
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Primary,
-                    selectedTextColor = Primary,
-                    unselectedIconColor = TextSecondary,
-                    unselectedTextColor = TextSecondary,
-                    indicatorColor = Secondary
-                )
-            )
-        }
-
-        NavigationBarItem(
-            selected = false,
-            onClick = { navController.navigate(Screen.AddTransaction.route) },
-            icon = {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_plus),
-                    contentDescription = "Add Transaction",
-                    tint = Color.White,
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(Primary, RoundedCornerShape(100.dp))
-                        .padding(12.dp)
-                )
-            },
-            label = {},
-            modifier = Modifier.testTag("nav_add_transaction")
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(88.dp)
+    ) {
+        // Background navbar
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(72.dp)
+                .align(Alignment.BottomCenter)
+                .background(Color.White)
         )
 
-        items.subList(2, 4).forEach { item ->
-            NavigationBarItem(
-                selected = currentRoute == item.route,
-                onClick = {
-                    navController.navigate(item.route) {
-                        popUpTo(navController.graph.startDestinationId) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                icon = {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(72.dp)
+                .background(Color.White),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.Bottom
+        ) {
+            // Dua item kiri
+            items.subList(0, 2).forEach { item ->
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(64.dp)
+                        .clickable {
+                            navController.navigate(item.route) {
+                                popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                        .testTag("nav_${item.route}"),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
                     Icon(
                         painter = painterResource(
                             id = if (currentRoute == item.route) item.iconFill else item.iconDefault
                         ),
-                        contentDescription = item.label
+                        contentDescription = item.label,
+                        tint = if (currentRoute == item.route) Primary else TextSecondary,
+                        modifier = Modifier.size(24.dp)
                     )
-                },
-                label = { Text(text = item.label) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Primary,
-                    selectedTextColor = Primary,
-                    unselectedIconColor = TextSecondary,
-                    unselectedTextColor = TextSecondary,
-                    indicatorColor = Secondary
-                )
-            )
+                    Spacer(modifier = Modifier.height(4.dp))
+//                    Text(
+//                        text = item.label,
+//                        fontFamily = Poppins,
+//                        fontSize = 10.sp,
+//                        color = if (currentRoute == item.route) Primary else TextSecondary
+//                    )
+                }
+            }
+
+            // Tombol + tengah
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(80.dp),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .offset(y=(-16).dp)
+                        .background(Primary, RoundedCornerShape(100.dp))
+                        .clickable { navController.navigate(Screen.AddTransaction.route) }
+                        .testTag("nav_add_transaction"),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_plus),
+                        contentDescription = "Add Transaction",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+
+            // Dua item kanan
+            items.subList(2, 4).forEach { item ->
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(64.dp)
+                        .clickable {
+                            navController.navigate(item.route) {
+                                popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                        .testTag("nav_${item.route}"),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        painter = painterResource(
+                            id = if (currentRoute == item.route) item.iconFill else item.iconDefault
+                        ),
+                        contentDescription = item.label,
+                        tint = if (currentRoute == item.route) Primary else TextSecondary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+//                    Text(
+//                        text = item.label,
+//                        fontFamily = Poppins,
+//                        fontSize = 10.sp,
+//                        color = if (currentRoute == item.route) Primary else TextSecondary
+//                    )
+                }
+            }
         }
     }
 }

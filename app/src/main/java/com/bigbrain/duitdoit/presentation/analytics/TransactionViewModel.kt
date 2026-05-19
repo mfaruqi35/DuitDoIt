@@ -78,6 +78,10 @@ class TransactionViewModel @Inject constructor(
         date: Long,
         onSuccess: () -> Unit
     ) {
+        if (amount <= 0) {
+            _errorMessage.value = "Invalid amount"
+            return
+        }
         viewModelScope.launch {
             val old = transactionRepository.getTransactionById(id)
             old?.let {
@@ -185,6 +189,10 @@ class TransactionViewModel @Inject constructor(
         date: Long,
         onSuccess: () -> Unit
     ) {
+        if (amount <= 0) {
+            _errorMessage.value = "Invalid amount"
+            return
+        }
         viewModelScope.launch {
             val account = accountRepository.getAccountById(accountId)
             account?.let {

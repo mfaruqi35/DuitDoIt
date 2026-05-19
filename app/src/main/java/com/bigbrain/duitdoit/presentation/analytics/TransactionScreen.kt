@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.bigbrain.duitdoit.data.local.entity.TransactionEntity
+import com.bigbrain.duitdoit.presentation.components.AppHeader
 import com.bigbrain.duitdoit.presentation.dashboard.formatCurrency
 import com.bigbrain.duitdoit.ui.theme.*
 import java.text.SimpleDateFormat
@@ -43,13 +44,14 @@ fun TransactionScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Transactions", fontFamily = Poppins) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Primary,
-                    titleContentColor = Color.White
-                )
-            )
+//            TopAppBar(
+//                title = { Text("Transactions", fontFamily = Poppins) },
+//                colors = TopAppBarDefaults.topAppBarColors(
+//                    containerColor = Primary,
+//                    titleContentColor = Color.White
+//                )
+//            )
+            AppHeader(title = "Analytics")
         }
     ) { innerPadding ->
         Column(

@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
+import com.bigbrain.duitdoit.presentation.components.AppHeader
 
 @Composable
 fun DashboardScreen(
@@ -30,6 +31,7 @@ fun DashboardScreen(
 ) {
     val accounts by viewModel.accounts.collectAsState()
     val latestByCategory by viewModel.latestByCategory.collectAsState()
+    val totalBalance by viewModel.totalBalance.collectAsState()
     val selectedAccountId by viewModel.selectedAccountId.collectAsState()
     val selectedPeriod by viewModel.selectedPeriod.collectAsState()
     val selectedTab by viewModel.selectedTab.collectAsState()
@@ -37,17 +39,61 @@ fun DashboardScreen(
     val categoryExpenses by viewModel.categoryExpenses.collectAsState()
     val categoryIncomes by viewModel.categoryIncomes.collectAsState()
 
+    var expanded by remember {mutableStateOf(false)}
+    val selectedAccount = accounts.find { it.id == selectedAccountId}
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Surface)
             .verticalScroll(rememberScrollState())
     ) {
-        DashboardHeader(
-            totalBalance = displayBalance,
-            accounts = accounts,
-            selectedAccountId = selectedAccountId,
-            onAccountSelected = { viewModel.selectAccount(it) }
+        AppHeader(
+            content = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = selectedAccount?.name ?: "All Accounts",
+                        color = Color.White.copy(alpha = 0.8f),
+                        fontSize = 14.sp,
+                        fontFamily = Poppins
+                    )
+                    IconButton(onClick = { expanded = true }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_next),
+                            contentDescription = "Select Account",
+                            tint = Color.White
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("All Accounts") },
+                            onClick = {
+                                viewModel.selectAccount(null)
+                                expanded = false
+                            }
+                        )
+                        accounts.forEach { account ->
+                            DropdownMenuItem(
+                                text = { Text(account.name) },
+                                onClick = {
+                                    viewModel.selectAccount(account.id)
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+                Text(
+                    text = formatCurrency(displayBalance),
+                    color = Color.White,
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = Poppins
+                )
+            }
         )
 
         Spacer(modifier = Modifier.height(16.dp))

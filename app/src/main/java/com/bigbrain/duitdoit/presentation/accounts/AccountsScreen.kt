@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.bigbrain.duitdoit.R
 import com.bigbrain.duitdoit.data.local.entity.AccountEntity
+import com.bigbrain.duitdoit.presentation.components.AppHeader
 import com.bigbrain.duitdoit.presentation.dashboard.formatCurrency
 import com.bigbrain.duitdoit.ui.theme.*
 
@@ -31,13 +32,7 @@ fun AccountsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Accounts", fontFamily = Poppins) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Primary,
-                    titleContentColor = Color.White
-                )
-            )
+            AppHeader(title = "Accounts")
         }
     ) { innerPadding ->
         Column(
