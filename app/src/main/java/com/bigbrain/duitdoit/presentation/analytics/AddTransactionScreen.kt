@@ -99,7 +99,11 @@ fun AddTransactionScreen(
             // Amount
             OutlinedTextField(
                 value = amount,
-                onValueChange = { amount = it },
+                onValueChange = { newValue ->
+                    if (newValue.all { it.isDigit() }) {
+                        amount = newValue
+                    }
+                },
                 label = { Text("Amount") },
                 modifier = Modifier.fillMaxWidth().testTag("field_amount"),
                 shape = RoundedCornerShape(12.dp),

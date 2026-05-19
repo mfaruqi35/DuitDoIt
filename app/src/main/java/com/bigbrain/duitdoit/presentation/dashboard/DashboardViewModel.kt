@@ -8,9 +8,13 @@ import com.bigbrain.duitdoit.data.repository.AccountRepository
 import com.bigbrain.duitdoit.data.repository.TransactionRepository
 import com.bigbrain.duitdoit.data.repository.CategoryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -69,52 +73,27 @@ class DashboardViewModel @Inject constructor(
         loadAccounts()
         loadTotalBalance()
         updateDisplayBalance()
-        val (start, end) = getPeriodDateRange("monthly")
-        loadCategoryData(start, end)
+//        val (start, end) = getPeriodDateRange("monthly")
+//        loadCategoryData(start, end)
+        observeCategoryData()
     }
 
-    private fun loadAccounts() {
-        viewModelScope.launch {
-            accountRepository.getAllAccounts().collect {
-                _accounts.value = it
-            }
-        }
-    }
 
-    private fun loadTotalBalance() {
+    private fun observeCategoryData() {
         viewModelScope.launch {
-            accountRepository.getTotalBalance().collect {
-                _totalBalance.value = it ?: 0.0
-            }
-        }
-    }
-    private fun updateDisplayBalance() {
-        viewModelScope.launch {
-            val accountId = _selectedAccountId.value
-            if (accountId == null) {
-                accountRepository.getTotalBalance().collect {
-                    _displayBalance.value = it ?: 0.0
+            combine(_selectedPeriod, _selectedAccountId) { period, accountId ->
+                Pair(period, accountId)
+            }.flatMapLatest { (period, accountId) ->
+                val (start, end) = getPeriodDateRange(period)
+                if (accountId == null) {
+                    transactionRepository.getTransactionsByPeriod(start, end)
+                } else {
+                    transactionRepository.getTransactionsByAccountAndPeriod(accountId, start, end)
                 }
-            } else {
-                val account = accountRepository.getAccountById(accountId)
-                _displayBalance.value = account?.balance ?: 0.0
-            }
-        }
-    }
-
-    private fun loadCategoryData(startDate: Long, endDate: Long) {
-        viewModelScope.launch {
-            val accountId = _selectedAccountId.value
-            val transactions = if (accountId == null) {
-                transactionRepository.getTransactionsByPeriod(startDate, endDate)
-            } else {
-                transactionRepository.getTransactionsByAccountAndPeriod(accountId, startDate, endDate)
-            }
-            transactions.collect { list ->
+            }.collect { list ->
                 val expenses = mutableMapOf<String, Double>()
                 val incomes = mutableMapOf<String, Double>()
                 val categoryMap = mutableMapOf<Long, com.bigbrain.duitdoit.data.local.entity.CategoryEntity?>()
-                val countMap = mutableMapOf<String, Int>()
 
                 list.forEach { transaction ->
                     val category = categoryMap.getOrPut(transaction.categoryId) {
@@ -123,10 +102,8 @@ class DashboardViewModel @Inject constructor(
                     val categoryName = category?.name ?: "Other"
                     if (transaction.type == "expense") {
                         expenses[categoryName] = (expenses[categoryName] ?: 0.0) + transaction.amount
-                        countMap[categoryName] = (countMap[categoryName] ?: 0) + 1
                     } else {
                         incomes[categoryName] = (incomes[categoryName] ?: 0.0) + transaction.amount
-                        countMap[categoryName] = (countMap[categoryName] ?: 0) + 1
                     }
                 }
 
@@ -148,6 +125,84 @@ class DashboardViewModel @Inject constructor(
             }
         }
     }
+    private fun loadAccounts() {
+        viewModelScope.launch {
+            accountRepository.getAllAccounts().collect {
+                _accounts.value = it
+            }
+        }
+    }
+
+    private fun loadTotalBalance() {
+        viewModelScope.launch {
+            accountRepository.getTotalBalance().collect {
+                _totalBalance.value = it ?: 0.0
+            }
+        }
+    }
+    private var balanceJob: Job? = null
+
+    private fun updateDisplayBalance() {
+        balanceJob?.cancel()
+        balanceJob = viewModelScope.launch {
+            val accountId = _selectedAccountId.value
+            if (accountId == null) {
+                accountRepository.getTotalBalance().collect {
+                    _displayBalance.value = it ?: 0.0
+                }
+            } else {
+                val account = accountRepository.getAccountById(accountId)
+                _displayBalance.value = account?.balance ?: 0.0
+            }
+        }
+    }
+
+//    private fun loadCategoryData(startDate: Long, endDate: Long) {
+//        viewModelScope.launch {
+//            val accountId = _selectedAccountId.value
+//            val transactions = if (accountId == null) {
+//                transactionRepository.getTransactionsByPeriod(startDate, endDate)
+//            } else {
+//                transactionRepository.getTransactionsByAccountAndPeriod(accountId, startDate, endDate)
+//            }
+//            transactions.collect { list ->
+//                val expenses = mutableMapOf<String, Double>()
+//                val incomes = mutableMapOf<String, Double>()
+//                val categoryMap = mutableMapOf<Long, com.bigbrain.duitdoit.data.local.entity.CategoryEntity?>()
+//                val countMap = mutableMapOf<String, Int>()
+//
+//                list.forEach { transaction ->
+//                    val category = categoryMap.getOrPut(transaction.categoryId) {
+//                        categoryRepository.getCategoryById(transaction.categoryId)
+//                    }
+//                    val categoryName = category?.name ?: "Other"
+//                    if (transaction.type == "expense") {
+//                        expenses[categoryName] = (expenses[categoryName] ?: 0.0) + transaction.amount
+//                        countMap[categoryName] = (countMap[categoryName] ?: 0) + 1
+//                    } else {
+//                        incomes[categoryName] = (incomes[categoryName] ?: 0.0) + transaction.amount
+//                        countMap[categoryName] = (countMap[categoryName] ?: 0) + 1
+//                    }
+//                }
+//
+//                _categoryExpenses.value = expenses
+//                _categoryIncomes.value = incomes
+//
+//                val summaries = list.groupBy { it.categoryId }.map { (categoryId, transactions) ->
+//                    val category = categoryMap[categoryId]
+//                    CategorySummary(
+//                        categoryId = categoryId,
+//                        categoryName = category?.name ?: "Other",
+//                        categoryColor = category?.color ?: "#6B7280",
+//                        transactionCount = transactions.size,
+//                        totalAmount = transactions.sumOf { it.amount }
+//                    )
+//                }.sortedByDescending { it.totalAmount }.take(5)
+//
+//                _latestByCategory.value = summaries
+//            }
+//        }
+//    }
 
     fun selectAccount(accountId: Long?) {
         _selectedAccountId.value = accountId
@@ -156,8 +211,6 @@ class DashboardViewModel @Inject constructor(
 
     fun selectPeriod(period: String) {
         _selectedPeriod.value = period
-        val (start, end) = getPeriodDateRange(period)
-        loadCategoryData(start, end)
     }
 
     fun selectTab(tab: String) {
@@ -195,7 +248,7 @@ class DashboardViewModel @Inject constructor(
 
     fun getPeriodDateRange(period: String): Pair<Long, Long> {
         val calendar = java.util.Calendar.getInstance()
-        val endDate = calendar.timeInMillis
+
         val startDate = when (period) {
             "daily" -> {
                 calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
@@ -217,8 +270,9 @@ class DashboardViewModel @Inject constructor(
                 calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
                 calendar.timeInMillis
             }
-            else -> endDate - (30L * 24 * 60 * 60 * 1000)
+            else -> 0L
         }
-        return Pair(startDate, endDate)
+
+        return Pair(startDate, Long.MAX_VALUE)
     }
 }

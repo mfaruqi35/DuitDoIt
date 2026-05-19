@@ -134,7 +134,7 @@ fun ChartCard(
     val data = if (selectedTab == "expense") categoryExpenses else categoryIncomes
     val total = data.values.sum()
     val categoryColors = mapOf(
-        "Food & Drinks" to CategoryFoodDrinks,
+        "Food" to CategoryFoodDrinks,
         "Transport" to CategoryTransport,
         "Shopping" to CategoryShopping,
         "Fun" to CategoryFun,
