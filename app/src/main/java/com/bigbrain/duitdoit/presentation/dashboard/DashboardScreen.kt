@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import com.bigbrain.duitdoit.presentation.components.AppHeader
 
 @Composable
@@ -38,7 +39,8 @@ fun DashboardScreen(
     val displayBalance by viewModel.displayBalance.collectAsState()
     val categoryExpenses by viewModel.categoryExpenses.collectAsState()
     val categoryIncomes by viewModel.categoryIncomes.collectAsState()
-
+    val periodOffset by viewModel.periodOffset.collectAsState()
+    val periodLabel = viewModel.getPeriodLabel(selectedPeriod, periodOffset)
     var expanded by remember {mutableStateOf(false)}
     val selectedAccount = accounts.find { it.id == selectedAccountId}
 
@@ -101,10 +103,15 @@ fun DashboardScreen(
         ChartCard(
             selectedTab = selectedTab,
             selectedPeriod = selectedPeriod,
+            periodOffset = periodOffset,
+            periodLabel = periodLabel,
             categoryExpenses = categoryExpenses,
             categoryIncomes = categoryIncomes,
             onTabSelected = { viewModel.selectTab(it) },
             onPeriodSelected = { viewModel.selectPeriod(it) },
+            onPreviousPeriod = { viewModel.previousPeriod() },
+            onNextPeriod = { viewModel.nextPeriod() },
+            onResetPeriod = { viewModel.resetPeriod() },
             latestByCategory = latestByCategory,
             onCategoryClick = onNavigateToCategoryDetail
         )
@@ -116,10 +123,15 @@ fun DashboardScreen(
 fun ChartCard(
     selectedTab: String,
     selectedPeriod: String,
+    periodOffset: Int,
+    periodLabel: String,
     categoryExpenses: Map<String, Double>,
     categoryIncomes: Map<String, Double>,
     onTabSelected: (String) -> Unit,
     onPeriodSelected: (String) -> Unit,
+    onPreviousPeriod: () -> Unit,
+    onNextPeriod: () -> Unit,
+    onResetPeriod: () -> Unit,
     latestByCategory: List<DashboardViewModel.CategorySummary>,
     onCategoryClick: (Long, String) -> Unit
 ) {
@@ -204,6 +216,44 @@ fun ChartCard(
                             selectedLabelColor = Color.White
                         )
                     )
+                }
+            }
+            Row (
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onPreviousPeriod) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_prev),
+                        contentDescription = "Previous",
+                        tint = TextSecondary
+                    )
+                }
+                Text(
+                    text = periodLabel,
+                    fontFamily = Poppins,
+                    fontSize = 14.sp,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Medium
+                )
+                Row {
+                    if (periodOffset != 0){
+                        IconButton(onClick = onResetPeriod) {
+                            Icon(
+                                painter= painterResource(id = R.drawable.ic_next),
+                                contentDescription = "Reset",
+                                tint = Primary
+                            )
+                        }
+                    }
+                    IconButton(onClick = onNextPeriod) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_next),
+                            contentDescription = "Next",
+                            tint = TextSecondary
+                        )
+                    }
                 }
             }
             if (data.isEmpty()) {

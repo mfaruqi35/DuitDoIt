@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -61,6 +63,9 @@ class DashboardViewModel @Inject constructor(
     private val _latestByCategory = MutableStateFlow<List<CategorySummary>>(emptyList())
     val latestByCategory: StateFlow<List<CategorySummary>> = _latestByCategory.asStateFlow()
 
+    private val _periodOffset = MutableStateFlow(0)
+    val periodOffset: StateFlow<Int> = _periodOffset.asStateFlow()
+
     data class CategorySummary(
         val categoryId: Long,
         val categoryName: String,
@@ -81,10 +86,10 @@ class DashboardViewModel @Inject constructor(
 
     private fun observeCategoryData() {
         viewModelScope.launch {
-            combine(_selectedPeriod, _selectedAccountId) { period, accountId ->
-                Pair(period, accountId)
-            }.flatMapLatest { (period, accountId) ->
-                val (start, end) = getPeriodDateRange(period)
+            combine(_selectedPeriod, _selectedAccountId, _periodOffset) { period, accountId, offset ->
+                Triple(period, accountId, offset)
+            }.flatMapLatest { (period, accountId, offset) ->
+                val (start, end) = getPeriodDateRange(period, offset)
                 if (accountId == null) {
                     transactionRepository.getTransactionsByPeriod(start, end)
                 } else {
@@ -211,6 +216,7 @@ class DashboardViewModel @Inject constructor(
 
     fun selectPeriod(period: String) {
         _selectedPeriod.value = period
+        _periodOffset.value = 0
     }
 
     fun selectTab(tab: String) {
@@ -246,33 +252,91 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
-    fun getPeriodDateRange(period: String): Pair<Long, Long> {
+    fun previousPeriod() {
+        _periodOffset.value -= 1
+    }
+
+    fun nextPeriod(){
+        _periodOffset.value += 1
+    }
+
+    fun resetPeriod(){
+        _periodOffset.value = 0
+    }
+
+    fun getPeriodLabel(period: String, offset: Int): String {
+        val calendar = java.util.Calendar.getInstance()
+        return when (period) {
+            "daily" -> {
+                calendar.add(java.util.Calendar.DAY_OF_YEAR, offset)
+                SimpleDateFormat("EEE, dd MMM yyyy", Locale.ENGLISH).format(calendar.time)
+            }
+            "weekly" -> {
+                calendar.add(java.util.Calendar.WEEK_OF_YEAR, offset)
+                val start = calendar.clone() as java.util.Calendar
+                start.set(java.util.Calendar.DAY_OF_WEEK, start.firstDayOfWeek)
+                val end = start.clone() as java.util.Calendar
+                end.add(java.util.Calendar.DAY_OF_WEEK, 6)
+                "${SimpleDateFormat("dd MMM", Locale.ENGLISH).format(start.time)} - ${SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH).format(end.time)}"
+            }
+            "monthly" -> {
+                calendar.add(java.util.Calendar.MONTH, offset)
+                SimpleDateFormat("MMMM yyyy", Locale.ENGLISH).format(calendar.time)
+            }
+            "yearly" -> {
+                calendar.add(java.util.Calendar.YEAR, offset)
+                SimpleDateFormat("yyyy", Locale.ENGLISH).format(calendar.time)
+            }
+            else -> ""
+        }
+    }
+
+    fun getPeriodDateRange(period: String, offset: Int = 0): Pair<Long, Long> {
         val calendar = java.util.Calendar.getInstance()
 
-        val startDate = when (period) {
+        return when (period) {
             "daily" -> {
+                calendar.add(java.util.Calendar.DAY_OF_YEAR, offset)
                 calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
                 calendar.set(java.util.Calendar.MINUTE, 0)
                 calendar.set(java.util.Calendar.SECOND, 0)
-                calendar.timeInMillis
+                val start = calendar.timeInMillis
+                calendar.set(java.util.Calendar.HOUR_OF_DAY, 23)
+                calendar.set(java.util.Calendar.MINUTE, 59)
+                calendar.set(java.util.Calendar.SECOND, 59)
+                Pair(start, calendar.timeInMillis)
             }
             "weekly" -> {
-                calendar.add(java.util.Calendar.DAY_OF_YEAR, -7)
-                calendar.timeInMillis
+                calendar.add(java.util.Calendar.WEEK_OF_YEAR, offset)
+                calendar.set(java.util.Calendar.DAY_OF_WEEK, calendar.firstDayOfWeek)
+                calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
+                val start = calendar.timeInMillis
+                calendar.add(java.util.Calendar.DAY_OF_WEEK, 6)
+                calendar.set(java.util.Calendar.HOUR_OF_DAY, 23)
+                calendar.set(java.util.Calendar.MINUTE, 59)
+                Pair(start, calendar.timeInMillis)
             }
             "monthly" -> {
+                calendar.add(java.util.Calendar.MONTH, offset)
                 calendar.set(java.util.Calendar.DAY_OF_MONTH, 1)
                 calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
-                calendar.timeInMillis
+                val start = calendar.timeInMillis
+                calendar.set(java.util.Calendar.DAY_OF_MONTH, calendar.getActualMaximum(java.util.Calendar.DAY_OF_MONTH))
+                calendar.set(java.util.Calendar.HOUR_OF_DAY, 23)
+                calendar.set(java.util.Calendar.MINUTE, 59)
+                Pair(start, calendar.timeInMillis)
             }
             "yearly" -> {
+                calendar.add(java.util.Calendar.YEAR, offset)
                 calendar.set(java.util.Calendar.DAY_OF_YEAR, 1)
                 calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
-                calendar.timeInMillis
+                val start = calendar.timeInMillis
+                calendar.set(java.util.Calendar.DAY_OF_YEAR, calendar.getActualMaximum(java.util.Calendar.DAY_OF_YEAR))
+                calendar.set(java.util.Calendar.HOUR_OF_DAY, 23)
+                calendar.set(java.util.Calendar.MINUTE, 59)
+                Pair(start, calendar.timeInMillis)
             }
-            else -> 0L
+            else -> Pair(0L, Long.MAX_VALUE)
         }
-
-        return Pair(startDate, Long.MAX_VALUE)
     }
 }
