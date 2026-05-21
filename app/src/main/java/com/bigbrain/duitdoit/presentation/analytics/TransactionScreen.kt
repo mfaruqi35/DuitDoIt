@@ -22,6 +22,12 @@ import com.bigbrain.duitdoit.presentation.dashboard.formatCurrency
 import com.bigbrain.duitdoit.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
+import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
+import com.patrykandpatrick.vico.compose.axis.vertical.rememberStartAxis
+import com.patrykandpatrick.vico.compose.chart.Chart
+import com.patrykandpatrick.vico.compose.chart.column.columnChart
+import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
+import com.patrykandpatrick.vico.core.entry.entryOf
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -147,6 +153,20 @@ fun TransactionScreen(
                     }
                 }
             }
+            val chartData by viewModel.chartData.collectAsState()
+
+            // Bar chart
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
+            ) {
+                Box(modifier = Modifier.padding(16.dp)) {
+                    TransactionBarChart(chartData = chartData)
+                }
+            }
 
             // Transaction list
             if (transactions.isEmpty()) {
@@ -191,6 +211,49 @@ fun TransactionScreen(
     }
 }
 
+@Composable
+fun TransactionBarChart(chartData: List<TransactionViewModel.ChartData>) {
+    if (chartData.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "No data for this period",
+                fontFamily = Poppins,
+                color = TextSecondary
+            )
+        }
+        return
+    }
+
+    val modelProducer = remember { ChartEntryModelProducer() }
+
+    LaunchedEffect(chartData) {
+        modelProducer.setEntries(
+            listOf(
+                chartData.mapIndexed { index, data -> entryOf(index.toFloat(), data.income.toFloat()) },
+                chartData.mapIndexed { index, data -> entryOf(index.toFloat(), data.expense.toFloat()) }
+            )
+        )
+    }
+
+    Chart(
+        chart = columnChart(),
+        chartModelProducer = modelProducer,
+        startAxis = rememberStartAxis(),
+        bottomAxis = rememberBottomAxis(
+            valueFormatter = { value, _ ->
+                chartData.getOrNull(value.toInt())?.label ?: ""
+            }
+        ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp)
+    )
+}
 @Composable
 fun TransactionItem(
     transaction: TransactionEntity,

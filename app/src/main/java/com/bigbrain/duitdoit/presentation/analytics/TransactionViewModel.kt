@@ -12,8 +12,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
+import java.util.Locale
 import javax.inject.Inject
+import java.text.SimpleDateFormat
+import java.util.Date
 
 @HiltViewModel
 class TransactionViewModel @Inject constructor(
@@ -25,6 +29,8 @@ class TransactionViewModel @Inject constructor(
     private val _transactions = MutableStateFlow<List<TransactionEntity>>(emptyList())
     val transactions: StateFlow<List<TransactionEntity>> = _transactions.asStateFlow()
 
+    private val _chartData = MutableStateFlow<List<ChartData>>(emptyList())
+    val chartData: StateFlow<List<ChartData>> = _chartData.asStateFlow()
     private val _selectedTransaction = MutableStateFlow<TransactionEntity?>(null)
     val selectedTransaction: StateFlow<TransactionEntity?> = _selectedTransaction.asStateFlow()
     private val _totalIncome = MutableStateFlow(0.0)
@@ -42,11 +48,17 @@ class TransactionViewModel @Inject constructor(
     private val _categories = MutableStateFlow<List<CategoryEntity>>(emptyList())
     val categories: StateFlow<List<CategoryEntity>> = _categories.asStateFlow()
 
+    data class ChartData(
+        val label: String,
+        val income: Double,
+        val expense: Double
+    )
     init {
         loadAccounts()
         loadCategories()
-        loadTransactions("monthly")
+        observeTransactions()
     }
+
 
     private fun loadAccounts() {
         viewModelScope.launch {
@@ -137,12 +149,10 @@ class TransactionViewModel @Inject constructor(
 
     fun selectPeriod(period: String) {
         _selectedPeriod.value = period
-        loadTransactions(period)
     }
 
     private fun getDateRange(period: String): Pair<Long, Long> {
         val calendar = java.util.Calendar.getInstance()
-        val endDate = calendar.timeInMillis
         val startDate = when (period) {
             "daily" -> {
                 calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
@@ -164,18 +174,52 @@ class TransactionViewModel @Inject constructor(
                 calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
                 calendar.timeInMillis
             }
-            else -> endDate - (30L * 24 * 60 * 60 * 1000)
+            else -> 0L
         }
-        return Pair(startDate, endDate)
+        return Pair(startDate, Long.MAX_VALUE)
     }
 
-    private fun loadTransactions(period: String) {
-        val (startDate, endDate) = getDateRange(period)
+    private fun updateChartData(list: List<TransactionEntity>, period: String) {
+        val grouped = when (period) {
+            "daily" -> {
+                val sdf = SimpleDateFormat("HH:00", Locale.ENGLISH)
+                list.groupBy { sdf.format(Date(it.date)) }
+            }
+            "weekly" -> {
+                val sdf = SimpleDateFormat("EEE", Locale.ENGLISH)
+                list.groupBy { sdf.format(Date(it.date)) }
+            }
+            "monthly" -> {
+                val sdf = SimpleDateFormat("dd", Locale.ENGLISH)
+                list.groupBy { sdf.format(Date(it.date)) }
+            }
+            "yearly" -> {
+                val sdf = SimpleDateFormat("MMM", Locale.ENGLISH)
+                list.groupBy { sdf.format(Date(it.date)) }
+            }
+            else -> emptyMap()
+        }
+
+        _chartData.value = grouped.map { (label, transactions) ->
+            ChartData(
+                label = label,
+                income = transactions.filter { it.type == "income" }.sumOf { it.amount },
+                expense = transactions.filter { it.type == "expense" }.sumOf { it.amount }
+            )
+        }.sortedBy { it.label }
+    }
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    private fun observeTransactions() {
         viewModelScope.launch {
-            transactionRepository.getTransactionsByPeriod(startDate, endDate).collect { list ->
+            _selectedPeriod.flatMapLatest { period ->
+                val (start, end) = getDateRange(period)
+                transactionRepository.getTransactionsByPeriod(start, end)
+            }.collect { list ->
                 _transactions.value = list
                 _totalIncome.value = list.filter { it.type == "income" }.sumOf { it.amount }
                 _totalExpense.value = list.filter { it.type == "expense" }.sumOf { it.amount }
+                updateChartData(list, _selectedPeriod.value)
             }
         }
     }
