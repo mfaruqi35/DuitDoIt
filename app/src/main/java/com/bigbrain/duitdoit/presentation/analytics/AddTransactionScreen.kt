@@ -1,5 +1,7 @@
 package com.bigbrain.duitdoit.presentation.analytics
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,9 +19,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.bigbrain.duitdoit.R
+import com.bigbrain.duitdoit.presentation.components.getCategoryColor
+import com.bigbrain.duitdoit.presentation.components.getCategoryIcon
 import com.bigbrain.duitdoit.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.Date
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,12 +43,12 @@ fun AddTransactionScreen(
     var note by remember { mutableStateOf("") }
     var selectedAccountId by remember { mutableStateOf<Long?>(null) }
     var selectedCategoryId by remember { mutableStateOf<Long?>(null) }
-    var selectedDate by remember { mutableStateOf(System.currentTimeMillis()) }
+    var selectedDate by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var accountExpanded by remember { mutableStateOf(false) }
 
     val filteredCategories = categories.filter { it.type == selectedType }
     val selectedAccount = accounts.find { it.id == selectedAccountId }
-    val selectedCategory = categories.find { it.id == selectedCategoryId }
+//    val selectedCategory = categories.find { it.id == selectedCategoryId }
     val errorMessage by viewModel.errorMessage.collectAsState()
 
     var showDatePicker by remember { mutableStateOf(false) }
@@ -286,21 +293,56 @@ fun CategoryGrid(
     selectedCategoryId: Long?,
     onCategorySelected: (Long) -> Unit
 ) {
-    val rows = categories.chunked(4)
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    val rows = categories.chunked(3)
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         rows.forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 row.forEach { category ->
-                    FilterChip(
-                        selected = selectedCategoryId == category.id,
-                        onClick = { onCategorySelected(category.id) },
-                        label = { Text(category.name, fontFamily = Poppins) },
-                        modifier = Modifier.testTag("chip_category_${category.name}"),
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = Primary,
-                            selectedLabelColor = Color.White
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { onCategorySelected(category.id) }
+                            .padding(4.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(64.dp)
+                                .background(
+                                    color = if (selectedCategoryId == category.id)
+                                        getCategoryColor(category.name)
+                                    else
+                                        getCategoryColor(category.name).copy(alpha = 0.3f),
+                                    shape = RoundedCornerShape(12.dp)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(id = getCategoryIcon(category.name)),
+                                contentDescription = category.name,
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = category.name,
+                            fontFamily = Poppins,
+                            fontSize = 14.sp,
+                            color = if (selectedCategoryId == category.id) Primary else TextSecondary,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )
-                    )
+                    }
+                }
+                // Isi sisa kolom kalau row tidak penuh
+                repeat(3 - row.size) {
+                    Spacer(modifier = Modifier.weight(1f))
                 }
             }
         }

@@ -24,6 +24,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import com.bigbrain.duitdoit.presentation.components.AppHeader
+import com.bigbrain.duitdoit.presentation.components.CategoryIconBox
 
 @Composable
 fun DashboardScreen(
@@ -480,11 +481,7 @@ fun CategorySummaryItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(color, RoundedCornerShape(12.dp))
-            )
+            CategoryIconBox(categoryName = summary.categoryName)
             Column {
                 Text(
                     text = summary.categoryName,
