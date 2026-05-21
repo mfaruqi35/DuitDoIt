@@ -30,5 +30,6 @@ data class RegularPaymentEntity(
     val nextRenewalDate: Long,
     val categoryId: Long,
     val accountId: Long? = null,
+    val icon: String = "ic_other",
     val isActive: Boolean = true
 )

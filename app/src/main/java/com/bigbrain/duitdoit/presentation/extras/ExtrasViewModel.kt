@@ -109,7 +109,8 @@ class ExtrasViewModel @Inject constructor(
         billingCycle: String,
         nextRenewalDate: Long,
         categoryId: Long,
-        accountId: Long?
+        accountId: Long?,
+        icon: String = "ic_other"
     ) {
         viewModelScope.launch {
             regularPaymentRepository.insertRegularPayment(
@@ -119,7 +120,8 @@ class ExtrasViewModel @Inject constructor(
                     billingCycle = billingCycle,
                     nextRenewalDate = nextRenewalDate,
                     categoryId = categoryId,
-                    accountId = accountId
+                    accountId = accountId,
+                    icon = icon
                 )
             )
         }

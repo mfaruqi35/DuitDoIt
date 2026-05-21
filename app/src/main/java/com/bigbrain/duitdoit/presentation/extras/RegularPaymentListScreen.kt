@@ -27,6 +27,7 @@ import java.util.*
 @Composable
 fun RegularPaymentListScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToAddRegularPayment: () -> Unit,
     viewModel: ExtrasViewModel = hiltViewModel()
 ) {
     val regularPayments by viewModel.regularPayments.collectAsState()
@@ -120,7 +121,7 @@ fun RegularPaymentListScreen(
 
             // Add button
             Button(
-                onClick = { showAddDialog = true },
+                onClick = onNavigateToAddRegularPayment,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
@@ -157,7 +158,19 @@ fun RegularPaymentListItem(
     payment: RegularPaymentEntity,
     onDelete: () -> Unit
 ) {
-    val sdf = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+    val sdf = SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH)
+    val iconColors = mapOf(
+        "ic_streaming" to Color(0xFFE50914),
+        "ic_iuran" to Color(0xFF16A34A),
+        "ic_utilities" to Color(0XFFEAB308),
+        "ic_software" to Color(0xFF8B5CF6),
+        "ic_cicilan" to Color(0xFF2563EB),
+        "ic_other" to Color(0xFF6B7280)
+    )
+
+    val iconColor = iconColors[payment.icon] ?: Color(0xFF6B7280)
+    val iconRes = getRegularPaymentIconRes(payment.icon)
+
     Card(
         modifier = Modifier.fillMaxWidth().testTag("regular_payment_item_${payment.name}"),
         shape = RoundedCornerShape(12.dp),
@@ -167,9 +180,22 @@ fun RegularPaymentListItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(iconColor, RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(id = iconRes),
+                    contentDescription = payment.name,
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = payment.name,
@@ -190,9 +216,12 @@ fun RegularPaymentListItem(
                     color = TextSecondary
                 )
             }
-            IconButton(onClick = onDelete, modifier = Modifier.testTag("regular_payment_item_${payment.name}")) {
+            IconButton(
+                onClick = onDelete,
+                modifier = Modifier.testTag("btn_delete_regular_payment_${payment.name}")
+            ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_delete),
+                    painter = painterResource(id = com.bigbrain.duitdoit.R.drawable.ic_delete),
                     contentDescription = "Delete",
                     tint = Expense
                 )
