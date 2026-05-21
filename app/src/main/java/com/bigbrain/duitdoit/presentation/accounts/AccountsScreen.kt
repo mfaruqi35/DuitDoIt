@@ -26,6 +26,7 @@ import com.bigbrain.duitdoit.ui.theme.*
 fun AccountsScreen(
     onNavigateToAddAccount: () -> Unit,
     onNavigateToTransfer: () -> Unit,
+    onNavigateToTransferHistory: () -> Unit,
     viewModel: AccountsViewModel = hiltViewModel()
 ) {
     val accounts by viewModel.accounts.collectAsState()
@@ -63,6 +64,17 @@ fun AccountsScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = Primary)
             ) {
                 Text("Transfer", fontFamily = Poppins)
+            }
+            Button(
+                onClick = onNavigateToTransferHistory,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .testTag("btn_transfer_history"),
+                shape = RoundedCornerShape(100.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Surface),
+            ) {
+                Text("Transfer History", fontFamily = Poppins, color = Primary)
             }
 
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {

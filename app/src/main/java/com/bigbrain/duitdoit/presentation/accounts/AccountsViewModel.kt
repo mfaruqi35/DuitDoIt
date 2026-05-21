@@ -3,6 +3,7 @@ package com.bigbrain.duitdoit.presentation.accounts
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bigbrain.duitdoit.data.local.entity.AccountEntity
+import com.bigbrain.duitdoit.data.local.entity.TransferEntity
 import com.bigbrain.duitdoit.data.repository.AccountRepository
 import com.bigbrain.duitdoit.data.repository.TransferRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,14 +24,26 @@ class AccountsViewModel @Inject constructor(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
+    private val _transfers = MutableStateFlow<List<TransferEntity>>(emptyList())
+    val transfers: StateFlow<List<TransferEntity>> = _transfers.asStateFlow()
+
     init {
         loadAccounts()
+        loadTransfers()
     }
 
     private fun loadAccounts() {
         viewModelScope.launch {
             accountRepository.getAllAccounts().collect {
                 _accounts.value = it
+            }
+        }
+    }
+
+    private fun loadTransfers() {
+        viewModelScope.launch {
+            transferRepository.getAllTransfers().collect {
+                _transfers.value = it
             }
         }
     }
