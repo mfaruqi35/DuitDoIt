@@ -15,7 +15,7 @@ import com.bigbrain.duitdoit.data.local.entity.*
         RegularPaymentEntity::class,
         TransferEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

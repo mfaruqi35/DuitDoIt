@@ -87,7 +87,8 @@ class ExtrasViewModel @Inject constructor(
         name: String,
         targetPrice: Double,
         priority: String,
-        accountId: Long?
+        accountId: Long?,
+        icon: String = "ic_other"
     ) {
         viewModelScope.launch {
             wishlistRepository.insertWishlistItem(
@@ -95,7 +96,8 @@ class ExtrasViewModel @Inject constructor(
                     name = name,
                     targetPrice = targetPrice,
                     priority = priority,
-                    accountId = accountId
+                    accountId = accountId,
+                    icon = icon
                 )
             )
         }

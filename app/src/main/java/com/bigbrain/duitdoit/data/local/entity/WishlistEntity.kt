@@ -23,5 +23,6 @@ data class WishlistEntity(
     val priority: String,
     val status: String = "saved",
     val accountId: Long? = null,
+    val icon: String = "ic_other",
     val createdAt: Long = System.currentTimeMillis()
 )

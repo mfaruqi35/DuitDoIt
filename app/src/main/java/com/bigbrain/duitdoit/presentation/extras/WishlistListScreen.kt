@@ -26,6 +26,7 @@ import com.bigbrain.duitdoit.ui.theme.*
 @Composable
 fun WishlistListScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToAddWishlist: () -> Unit,
     viewModel: ExtrasViewModel = hiltViewModel()
 ) {
     val wishlistItems by viewModel.wishlistItems.collectAsState()
@@ -140,7 +141,7 @@ fun WishlistListScreen(
 
             // Add wishlist button
             Button(
-                onClick = { showAddDialog = true },
+                onClick = onNavigateToAddWishlist,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
@@ -187,6 +188,18 @@ fun WishlistListItem(
         (account.balance / item.targetPrice).coerceIn(0.0, 1.0).toFloat()
     } else 0f
 
+    val iconColors = mapOf(
+        "ic_electronics" to Color(0xFF2563EB),
+        "ic_fashion" to Color(0xFFEC4899),
+        "ic_food" to Color(0xFFEF4444),
+        "ic_travel" to Color(0xFF06B6D4),
+        "ic_health" to Color(0xFF14B8A6),
+        "ic_other" to Color(0xFF6B7280)
+    )
+
+    val iconColor = iconColors[item.icon] ?: Color(0xFF6B7280)
+    val iconRes = getWishlistIconRes(item.icon)
+
     Card(
         modifier = Modifier.fillMaxWidth().testTag("wishlist_item_${item.id}"),
         shape = RoundedCornerShape(12.dp),
@@ -196,16 +209,41 @@ fun WishlistListItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = item.name,
-                    fontFamily = Poppins,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(iconColor, RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(id = iconRes),
+                    contentDescription = item.name,
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
                 )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = item.name,
+                        fontFamily = Poppins,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        text = item.priority.replaceFirstChar { it.uppercase() },
+                        fontFamily = Poppins,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 12.sp,
+                        color = priorityColor
+                    )
+                }
                 Text(
                     text = "${formatCurrency(account?.balance ?: 0.0)} from ${formatCurrency(item.targetPrice)}",
                     fontFamily = Poppins,
@@ -228,22 +266,15 @@ fun WishlistListItem(
                     )
                 }
             }
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = item.priority.replaceFirstChar { it.uppercase() },
-                    fontFamily = Poppins,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 12.sp,
-                    color = priorityColor
+            IconButton(
+                onClick = onDelete,
+                modifier = Modifier.testTag("btn_delete_wishlist_${item.name}")
+            ) {
+                Icon(
+                    painter = painterResource(id = com.bigbrain.duitdoit.R.drawable.ic_delete),
+                    contentDescription = "Delete",
+                    tint = Expense
                 )
-                IconButton(onClick = onDelete, modifier = Modifier.testTag("btn_delete_wishlist_${item.name}")) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_delete),
-                        contentDescription = "Delete",
-                        tint = Expense
-                    )
-                }
             }
         }
     }

@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -221,6 +222,18 @@ fun WishlistItemCard(item: WishlistEntity, accounts: List<com.bigbrain.duitdoit.
         (account.balance / item.targetPrice).coerceIn(0.0, 1.0).toFloat()
     } else 0f
 
+    val iconColors = mapOf(
+        "ic_electronics" to Color(0xFF2563EB),
+        "ic_fashion" to Color(0xFFEC4899),
+        "ic_food" to Color(0xFFEF4444),
+        "ic_travel" to Color(0xFF06B6D4),
+        "ic_health" to Color(0xFF14B8A6),
+        "ic_other" to Color(0xFF6B7280)
+    )
+
+    val iconColor = iconColors[item.icon] ?: Color(0xFF6B7280)
+    val iconRes = getWishlistIconRes(item.icon)
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -229,21 +242,46 @@ fun WishlistItemCard(item: WishlistEntity, accounts: List<com.bigbrain.duitdoit.
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+                .padding(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = item.name,
-                    fontFamily = Poppins,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(iconColor, RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(id = iconRes),
+                    contentDescription = item.name,
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
                 )
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = item.name,
+                        fontFamily = Poppins,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        text = item.priority.replaceFirstChar { it.uppercase() },
+                        fontFamily = Poppins,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 12.sp,
+                        color = priorityColor
+                    )
+                }
                 Text(
                     text = formatCurrency(item.targetPrice),
                     fontFamily = Poppins,
-                    fontSize = 13.sp,
+                    fontSize = 12.sp,
                     color = TextSecondary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
@@ -254,14 +292,6 @@ fun WishlistItemCard(item: WishlistEntity, accounts: List<com.bigbrain.duitdoit.
                     trackColor = priorityColor.copy(alpha = 0.2f)
                 )
             }
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = item.priority.replaceFirstChar { it.uppercase() },
-                fontFamily = Poppins,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 12.sp,
-                color = priorityColor
-            )
         }
     }
 }
