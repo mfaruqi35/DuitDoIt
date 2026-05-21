@@ -1,5 +1,6 @@
 package com.bigbrain.duitdoit.presentation.accounts
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -12,6 +13,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.bigbrain.duitdoit.R
+import com.bigbrain.duitdoit.ui.theme.*
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
 import com.bigbrain.duitdoit.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -77,18 +82,41 @@ fun AddAccountScreen(
             )
             Text("Select Icon", fontFamily = Poppins, color = TextSecondary)
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 icons.forEach { (iconName, iconRes) ->
-                    IconButton(
-                        onClick = { selectedIcon = iconName },
-                        modifier = Modifier.size(48.dp).testTag("btn_icon_$iconName")
+                    val isSelected = selectedIcon == iconName
+                    val color = when (iconName) {
+                        "ic_wallet" ->  AccountWallet
+                        "ic_bank" -> AccountBank
+                        "ic_ewallet" -> AccountEWallet
+                        "ic_savings" -> AccountSavings
+                        else -> AccountOther
+                    }
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { selectedIcon = iconName }
+                            .testTag("btn_icon_$iconName")
                     ) {
-                        Icon(
-                            painter = painterResource(id = iconRes),
-                            contentDescription = iconName,
-                            tint = if (selectedIcon == iconName) Primary else TextSecondary
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(56.dp)
+                                .background(
+                                    color = if (isSelected) color else color.copy(alpha = 0.3f),
+                                    shape = RoundedCornerShape(12.dp)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(id = iconRes),
+                                contentDescription = iconName,
+                                tint = Color.White,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
                     }
                 }
             }

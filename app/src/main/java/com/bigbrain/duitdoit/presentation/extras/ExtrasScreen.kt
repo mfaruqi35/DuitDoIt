@@ -104,7 +104,7 @@ fun ExtrasScreen(
 
             // Regular Payment section
             item {
-                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                Column(modifier = Modifier.padding(horizontal = 24.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -139,7 +139,7 @@ fun ExtrasScreen(
 
             // Wishlist section
             item {
-                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                Column(modifier = Modifier.padding(horizontal = 24.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
