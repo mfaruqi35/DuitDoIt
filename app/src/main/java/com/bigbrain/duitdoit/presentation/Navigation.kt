@@ -79,6 +79,9 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
             DashboardScreen(
                 onNavigateToCategoryDetail = { id, name ->
                     navController.navigate(Screen.CategoryDetail.createRoute(id, name))
+                },
+                onNavigateToRegularPaymentList = {
+                    navController.navigate(Screen.RegularPaymentList.route)
                 }
             )
         }
@@ -127,6 +130,7 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
                 onNavigateToAddWishlist = { navController.navigate(Screen.AddWishlist.route) }
             )
         }
+
         composable(Screen.AddWishlist.route) {
             AddWishlistScreen(
                 onNavigateBack = { navController.popBackStack() }

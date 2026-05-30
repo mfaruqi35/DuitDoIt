@@ -7,6 +7,7 @@ import com.bigbrain.duitdoit.data.local.entity.AccountEntity
 import com.bigbrain.duitdoit.data.repository.AccountRepository
 import com.bigbrain.duitdoit.data.repository.TransactionRepository
 import com.bigbrain.duitdoit.data.repository.CategoryRepository
+import com.bigbrain.duitdoit.data.repository.RegularPaymentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,7 +25,8 @@ import javax.inject.Inject
 class DashboardViewModel @Inject constructor(
     private val accountRepository: AccountRepository,
     private val transactionRepository: TransactionRepository,
-    private val categoryRepository: CategoryRepository
+    private val categoryRepository: CategoryRepository,
+    private val regularPaymentRepository: RegularPaymentRepository
 ) : ViewModel() {
 
     private val _accounts = MutableStateFlow<List<AccountEntity>>(emptyList())
@@ -66,6 +68,10 @@ class DashboardViewModel @Inject constructor(
     private val _periodOffset = MutableStateFlow(0)
     val periodOffset: StateFlow<Int> = _periodOffset.asStateFlow()
 
+    private val _regularPayments = MutableStateFlow<List<com.bigbrain.duitdoit.data.local.entity.RegularPaymentEntity>>(emptyList())
+    val regularPayments: StateFlow<List<com.bigbrain.duitdoit.data.local.entity.RegularPaymentEntity>> = _regularPayments.asStateFlow()
+
+
     data class CategorySummary(
         val categoryId: Long,
         val categoryName: String,
@@ -81,6 +87,14 @@ class DashboardViewModel @Inject constructor(
 //        val (start, end) = getPeriodDateRange("monthly")
 //        loadCategoryData(start, end)
         observeCategoryData()
+        loadRegularPayments()
+    }
+    private fun loadRegularPayments() {
+        viewModelScope.launch {
+            regularPaymentRepository.getAllActiveRegularPayments().collect {
+                _regularPayments.value = it
+            }
+        }
     }
 
 
@@ -162,52 +176,6 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
-//    private fun loadCategoryData(startDate: Long, endDate: Long) {
-//        viewModelScope.launch {
-//            val accountId = _selectedAccountId.value
-//            val transactions = if (accountId == null) {
-//                transactionRepository.getTransactionsByPeriod(startDate, endDate)
-//            } else {
-//                transactionRepository.getTransactionsByAccountAndPeriod(accountId, startDate, endDate)
-//            }
-//            transactions.collect { list ->
-//                val expenses = mutableMapOf<String, Double>()
-//                val incomes = mutableMapOf<String, Double>()
-//                val categoryMap = mutableMapOf<Long, com.bigbrain.duitdoit.data.local.entity.CategoryEntity?>()
-//                val countMap = mutableMapOf<String, Int>()
-//
-//                list.forEach { transaction ->
-//                    val category = categoryMap.getOrPut(transaction.categoryId) {
-//                        categoryRepository.getCategoryById(transaction.categoryId)
-//                    }
-//                    val categoryName = category?.name ?: "Other"
-//                    if (transaction.type == "expense") {
-//                        expenses[categoryName] = (expenses[categoryName] ?: 0.0) + transaction.amount
-//                        countMap[categoryName] = (countMap[categoryName] ?: 0) + 1
-//                    } else {
-//                        incomes[categoryName] = (incomes[categoryName] ?: 0.0) + transaction.amount
-//                        countMap[categoryName] = (countMap[categoryName] ?: 0) + 1
-//                    }
-//                }
-//
-//                _categoryExpenses.value = expenses
-//                _categoryIncomes.value = incomes
-//
-//                val summaries = list.groupBy { it.categoryId }.map { (categoryId, transactions) ->
-//                    val category = categoryMap[categoryId]
-//                    CategorySummary(
-//                        categoryId = categoryId,
-//                        categoryName = category?.name ?: "Other",
-//                        categoryColor = category?.color ?: "#6B7280",
-//                        transactionCount = transactions.size,
-//                        totalAmount = transactions.sumOf { it.amount }
-//                    )
-//                }.sortedByDescending { it.totalAmount }.take(5)
-//
-//                _latestByCategory.value = summaries
-//            }
-//        }
-//    }
 
     fun selectAccount(accountId: Long?) {
         _selectedAccountId.value = accountId

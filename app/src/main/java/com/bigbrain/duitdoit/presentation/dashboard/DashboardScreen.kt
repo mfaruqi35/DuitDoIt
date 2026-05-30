@@ -25,10 +25,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import com.bigbrain.duitdoit.presentation.components.AppHeader
 import com.bigbrain.duitdoit.presentation.components.CategoryIconBox
+import com.bigbrain.duitdoit.presentation.extras.RegularPaymentCard
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import com.bigbrain.duitdoit.presentation.Screen
 
 @Composable
 fun DashboardScreen(
     onNavigateToCategoryDetail: (Long, String) -> Unit,
+    onNavigateToRegularPaymentList: () -> Unit,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val accounts by viewModel.accounts.collectAsState()
@@ -44,6 +49,7 @@ fun DashboardScreen(
     val periodLabel = viewModel.getPeriodLabel(selectedPeriod, periodOffset)
     var expanded by remember {mutableStateOf(false)}
     val selectedAccount = accounts.find { it.id == selectedAccountId}
+    val regularPayments by viewModel.regularPayments.collectAsState()
 
     Column(
         modifier = Modifier
@@ -114,8 +120,13 @@ fun DashboardScreen(
             onNextPeriod = { viewModel.nextPeriod() },
             onResetPeriod = { viewModel.resetPeriod() },
             latestByCategory = latestByCategory,
-            onCategoryClick = onNavigateToCategoryDetail
+            onCategoryClick = onNavigateToCategoryDetail,
+            regularPayments = regularPayments,
+            onNavigateToRegularPaymentList = {
+                onNavigateToRegularPaymentList()
+            }
         )
+
     }
 }
 
@@ -134,7 +145,9 @@ fun ChartCard(
     onNextPeriod: () -> Unit,
     onResetPeriod: () -> Unit,
     latestByCategory: List<DashboardViewModel.CategorySummary>,
-    onCategoryClick: (Long, String) -> Unit
+    onCategoryClick: (Long, String) -> Unit,
+    regularPayments: List<com.bigbrain.duitdoit.data.local.entity.RegularPaymentEntity>,
+    onNavigateToRegularPaymentList: () -> Unit,
 ) {
     val periods = listOf("daily", "weekly", "monthly", "yearly")
     val periodLabels = mapOf(
@@ -305,6 +318,43 @@ fun ChartCard(
     }
     Spacer(modifier = Modifier.height(16.dp))
 
+    if (regularPayments.isNotEmpty()) {
+        Spacer(modifier = Modifier.height(16.dp))
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Regular Payments",
+                    fontFamily = Poppins,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp,
+                    color = TextPrimary,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                TextButton(onClick = onNavigateToRegularPaymentList) {
+                    Text("See all", fontFamily = Poppins, color = Primary)
+                }
+            }
+
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(regularPayments.take(3)) { payment ->
+                    RegularPaymentCard(payment = payment)
+                }
+            }
+        }
+    }
+
+    Spacer(modifier = Modifier.height(16.dp))
+
     LatestByCategorySection(
         categories = latestByCategory,
         onCategoryClick = onCategoryClick
@@ -422,36 +472,31 @@ fun LatestByCategorySection(
     categories: List<DashboardViewModel.CategorySummary>,
     onCategoryClick: (Long, String) -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Text(
+            text = "By Category",
+            fontFamily = Poppins,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 16.sp,
+            color = TextPrimary,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        if (categories.isEmpty()) {
             Text(
-                text = "By Category",
+                text = "No transactions yet",
                 fontFamily = Poppins,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 16.sp,
-                color = TextPrimary
+                color = TextSecondary,
+                fontSize = 14.sp
             )
-            Spacer(modifier = Modifier.height(12.dp))
-            if (categories.isEmpty()) {
-                Text(
-                    text = "No transactions yet",
-                    fontFamily = Poppins,
-                    color = TextSecondary,
-                    fontSize = 14.sp
-                )
-            } else {
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 categories.forEach { summary ->
                     CategorySummaryItem(
                         summary = summary,
                         onClick = { onCategoryClick(summary.categoryId, summary.categoryName) }
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
                 }
             }
         }
@@ -469,42 +514,50 @@ fun CategorySummaryItem(
         CategoryOther
     }
 
-    Row(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+            .clickable { onClick() },
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Border)
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            CategoryIconBox(categoryName = summary.categoryName)
-            Column {
-                Text(
-                    text = summary.categoryName,
-                    fontFamily = Poppins,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 14.sp,
-                    color = TextPrimary
-                )
-                Text(
-                    text = "${summary.transactionCount} transactions",
-                    fontFamily = Poppins,
-                    fontSize = 12.sp,
-                    color = TextSecondary
-                )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                CategoryIconBox(categoryName = summary.categoryName)
+                Column {
+                    Text(
+                        text = summary.categoryName,
+                        fontFamily = Poppins,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 14.sp,
+                        color = TextPrimary
+                    )
+                    Text(
+                        text = "${summary.transactionCount} transactions",
+                        fontFamily = Poppins,
+                        fontSize = 12.sp,
+                        color = TextSecondary
+                    )
+                }
             }
+            Text(
+                text = formatCurrency(summary.totalAmount),
+                fontFamily = Poppins,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp,
+                color = TextPrimary
+            )
         }
-        Text(
-            text = formatCurrency(summary.totalAmount),
-            fontFamily = Poppins,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 14.sp,
-            color = TextPrimary
-        )
     }
 }
 
