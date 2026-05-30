@@ -21,6 +21,10 @@ import com.bigbrain.duitdoit.data.local.entity.WishlistEntity
 import com.bigbrain.duitdoit.presentation.components.AppHeader
 import com.bigbrain.duitdoit.presentation.dashboard.formatCurrency
 import com.bigbrain.duitdoit.ui.theme.*
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.semantics.testTagsAsResourceId
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -117,7 +121,7 @@ fun ExtrasScreen(
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 16.sp
                         )
-                        TextButton(onClick = onNavigateToRegularPaymentList) {
+                        TextButton(onClick = onNavigateToRegularPaymentList, modifier = Modifier.semantics { contentDescription = "btn_see_all_regular_payment"}) {
                             Text("See all", fontFamily = Poppins, color = Primary)
                         }
                     }
@@ -152,7 +156,7 @@ fun ExtrasScreen(
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 16.sp
                         )
-                        TextButton(onClick = onNavigateToWishlistList) {
+                        TextButton(onClick = onNavigateToWishlistList, modifier = Modifier.semantics { contentDescription = "btn_see_all_wishlist"}) {
                             Text("See all", fontFamily = Poppins, color = Primary)
                         }
                     }

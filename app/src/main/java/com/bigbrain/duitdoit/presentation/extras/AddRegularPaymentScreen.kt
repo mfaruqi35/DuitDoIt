@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -79,6 +81,7 @@ fun AddRegularPaymentScreen(
                 label = { Text("Name") },
                 modifier = Modifier
                     .fillMaxWidth()
+                    .semantics{ contentDescription = "field_regular_payment_name"}
                     .testTag("field_regular_payment_name"),
                 shape = RoundedCornerShape(12.dp)
             )
@@ -89,6 +92,7 @@ fun AddRegularPaymentScreen(
                 label = { Text("Amount") },
                 modifier = Modifier
                     .fillMaxWidth()
+                    .semantics{ contentDescription = "field_regular_payment_amount" }
                     .testTag("field_regular_payment_amount"),
                 shape = RoundedCornerShape(12.dp),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -109,6 +113,7 @@ fun AddRegularPaymentScreen(
                         },
                         modifier = Modifier
                             .weight(1f)
+                            .semantics{ contentDescription = "chip_billing_cycle_$cycle" }
                             .testTag("chip_billing_cycle_$cycle"),
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = Primary,
@@ -215,6 +220,7 @@ fun AddRegularPaymentScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
+                    .semantics{ contentDescription = "btn_save_regular_payment"}
                     .testTag("btn_save_regular_payment"),
                 shape = RoundedCornerShape(100.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Primary)

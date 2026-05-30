@@ -12,6 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -146,6 +148,7 @@ fun WishlistListScreen(
                     .fillMaxWidth()
                     .padding(16.dp)
                     .height(52.dp)
+                    .semantics { contentDescription = "btn_add_wishlist"}
                     .testTag("btn_add_wishlist"),
                 shape = RoundedCornerShape(100.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Primary)
@@ -157,6 +160,7 @@ fun WishlistListScreen(
 
     if (showAddDialog) {
         AddWishlistDialog(
+
             accounts = accounts,
             onDismiss = { showAddDialog = false },
             onConfirm = { name, targetPrice, priority, accountId ->
@@ -201,7 +205,7 @@ fun WishlistListItem(
     val iconRes = getWishlistIconRes(item.icon)
 
     Card(
-        modifier = Modifier.fillMaxWidth().testTag("wishlist_item_${item.id}"),
+        modifier = Modifier.fillMaxWidth().semantics{ contentDescription = "wishlist_item_${item.name}"}.testTag("wishlist_item_${item.name}"),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
@@ -268,7 +272,7 @@ fun WishlistListItem(
             }
             IconButton(
                 onClick = onDelete,
-                modifier = Modifier.testTag("btn_delete_wishlist_${item.name}")
+                modifier = Modifier.semantics{ contentDescription = "btn_delete_wishlist_${item.name}"}.testTag("btn_delete_wishlist_${item.name}")
             ) {
                 Icon(
                     painter = painterResource(id = com.bigbrain.duitdoit.R.drawable.ic_delete),

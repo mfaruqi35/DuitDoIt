@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.bigbrain.duitdoit.presentation.components.AppHeader
 import com.bigbrain.duitdoit.ui.theme.*
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,6 +81,7 @@ fun AddWishlistScreen(
                 label = { Text("Item name") },
                 modifier = Modifier
                     .fillMaxWidth()
+                    .semantics{ contentDescription = "field_wishlist_name" }
                     .testTag("field_wishlist_name"),
                 shape = RoundedCornerShape(12.dp)
             )
@@ -89,6 +92,7 @@ fun AddWishlistScreen(
                 label = { Text("Target price") },
                 modifier = Modifier
                     .fillMaxWidth()
+                    .semantics{ contentDescription = "field_wishlist_price" }
                     .testTag("field_wishlist_price"),
                 shape = RoundedCornerShape(12.dp),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -109,6 +113,7 @@ fun AddWishlistScreen(
                         },
                         modifier = Modifier
                             .weight(1f)
+                            .semantics{ contentDescription = "chip_priority_$p" }
                             .testTag("chip_priority_$p"),
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = when (p) {
@@ -208,6 +213,7 @@ fun AddWishlistScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
+                    .semantics{ contentDescription = "btn_save_wishlist" }
                     .testTag("btn_save_wishlist"),
                 shape = RoundedCornerShape(100.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Primary)

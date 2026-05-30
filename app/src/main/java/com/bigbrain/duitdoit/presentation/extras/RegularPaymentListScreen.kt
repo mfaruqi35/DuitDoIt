@@ -12,6 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -126,6 +128,7 @@ fun RegularPaymentListScreen(
                     .fillMaxWidth()
                     .padding(16.dp)
                     .height(52.dp)
+                    .semantics{ contentDescription = "btn_add_regular_payment" }
                     .testTag("btn_add_regular_payment"),
                 shape = RoundedCornerShape(100.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Primary)
@@ -172,7 +175,7 @@ fun RegularPaymentListItem(
     val iconRes = getRegularPaymentIconRes(payment.icon)
 
     Card(
-        modifier = Modifier.fillMaxWidth().testTag("regular_payment_item_${payment.name}"),
+        modifier = Modifier.fillMaxWidth().semantics{ contentDescription = "regular_payment_item_${payment.name}" }.testTag("regular_payment_item_${payment.name}"),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
@@ -218,7 +221,7 @@ fun RegularPaymentListItem(
             }
             IconButton(
                 onClick = onDelete,
-                modifier = Modifier.testTag("btn_delete_regular_payment_${payment.name}")
+                modifier = Modifier.semantics{ contentDescription = "btn_delete_regular_payment_${payment.name}"}.testTag("btn_delete_regular_payment_${payment.name}")
             ) {
                 Icon(
                     painter = painterResource(id = com.bigbrain.duitdoit.R.drawable.ic_delete),
@@ -248,14 +251,14 @@ fun AddRegularPaymentDialog(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text("Name") },
-                    modifier = Modifier.fillMaxWidth().testTag("field_regular_payment_name"),
+                    modifier = Modifier.fillMaxWidth().semantics{ contentDescription = "field_regular_payment_name" }.testTag("field_regular_payment_name"),
                     shape = RoundedCornerShape(12.dp)
                 )
                 OutlinedTextField(
                     value = amount,
                     onValueChange = { amount = it },
                     label = { Text("Amount") },
-                    modifier = Modifier.fillMaxWidth().testTag("field_regular_payment_amount"),
+                    modifier = Modifier.fillMaxWidth().semantics{ contentDescription = "field_regular_payment_amount" }.testTag("field_regular_payment_amount"),
                     shape = RoundedCornerShape(12.dp),
                     prefix = { Text("Rp ") }
                 )
@@ -271,7 +274,7 @@ fun AddRegularPaymentDialog(
                                     fontFamily = Poppins
                                 )
                             },
-                            modifier = Modifier.testTag("chip_billing_cycle_$cycle"),
+                            modifier = Modifier.semantics{ contentDescription = "chip_billing_cycle_$cycle" }.testTag("chip_billing_cycle_$cycle"),
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = Primary,
                                 selectedLabelColor = Color.White
@@ -297,7 +300,7 @@ fun AddRegularPaymentDialog(
                         onConfirm(name, amount.toDoubleOrNull() ?: 0.0, billingCycle, nextRenewal)
                     }
                 },
-                modifier = Modifier.testTag("btn_save_regular_payment"),
+                modifier = Modifier.semantics{ contentDescription = "btn_save_regular_payment" }.testTag("btn_save_regular_payment"),
                 colors = ButtonDefaults.buttonColors(containerColor = Primary)
             ) {
                 Text("Save", fontFamily = Poppins)

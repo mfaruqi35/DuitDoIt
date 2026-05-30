@@ -28,6 +28,9 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import java.util.Locale
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -94,7 +97,7 @@ fun AddTransactionScreen(
                             selectedCategoryId = null
                         },
                         label = { Text(type.replaceFirstChar { it.uppercase() }, fontFamily = Poppins) },
-                        modifier = Modifier.weight(1f).testTag("chip_type_$type"),
+                        modifier = Modifier.weight(1f).testTag("chip_type_$type").semantics { contentDescription = "chip_type_$type" },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = Primary,
                             selectedLabelColor = Color.White
@@ -119,7 +122,7 @@ fun AddTransactionScreen(
                     }
                 },
                 label = { Text("Amount") },
-                modifier = Modifier.fillMaxWidth().testTag("field_amount"),
+                modifier = Modifier.fillMaxWidth().testTag("field_amount").semantics { contentDescription = "field_amount" },
                 shape = RoundedCornerShape(12.dp),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 prefix = { Text("Rp ") }
@@ -138,7 +141,8 @@ fun AddTransactionScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .menuAnchor()
-                        .testTag("dropdown_account"),
+                        .testTag("dropdown_account")
+                        .semantics { contentDescription = "dropdown_account" },
                     shape = RoundedCornerShape(12.dp),
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = accountExpanded) }
                 )
@@ -254,7 +258,7 @@ fun AddTransactionScreen(
                 value = note,
                 onValueChange = { note = it },
                 label = { Text("Note (optional)") },
-                modifier = Modifier.fillMaxWidth().testTag("field_note"),
+                modifier = Modifier.fillMaxWidth().testTag("field_note").semantics { contentDescription = "field_note" },
                 shape = RoundedCornerShape(12.dp)
             )
 
@@ -277,7 +281,7 @@ fun AddTransactionScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
-                    .testTag("btn_save_transactions"),
+                    .testTag("btn_save_transactions").semantics { contentDescription = "btn_save_transactions" },
                 shape = RoundedCornerShape(100.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Primary)
             ) {
@@ -308,6 +312,8 @@ fun CategoryGrid(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
                             .weight(1f)
+                            .testTag("chip_category_${category.name}")
+                            .semantics{ contentDescription = "chip_category_${category.name}"}
                             .clickable { onCategorySelected(category.id) }
                             .padding(4.dp)
                     ) {

@@ -18,6 +18,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import com.bigbrain.duitdoit.ui.theme.*
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,14 +71,14 @@ fun AddAccountScreen(
                 value = name,
                 onValueChange = { name = it },
                 label = { Text("Account Name") },
-                modifier = Modifier.fillMaxWidth().testTag("field_account_name"),
+                modifier = Modifier.fillMaxWidth().testTag("field_account_name").semantics { contentDescription = "field_account_name" },
                 shape = RoundedCornerShape(12.dp)
             )
             OutlinedTextField(
                 value = balance,
                 onValueChange = { balance = it },
                 label = { Text("Initial Balance") },
-                modifier = Modifier.fillMaxWidth().testTag("field_account_balance"),
+                modifier = Modifier.fillMaxWidth().testTag("field_account_balance").semantics { contentDescription = "field_account_balance" },
                 shape = RoundedCornerShape(12.dp),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 prefix = { Text("Rp") }
@@ -99,7 +102,7 @@ fun AddAccountScreen(
                         modifier = Modifier
                             .weight(1f)
                             .clickable { selectedIcon = iconName }
-                            .testTag("btn_icon_$iconName")
+                            .testTag("btn_icon_$iconName").semantics { contentDescription = "btn_icon_$iconName" }
                     ) {
                         Box(
                             modifier = Modifier
@@ -137,7 +140,7 @@ fun AddAccountScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
-                    .testTag("btn_save_account"),
+                    .testTag("btn_save_account").semantics { contentDescription = "btn_save_account" },
                 shape = RoundedCornerShape(100.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Primary)
             ) {

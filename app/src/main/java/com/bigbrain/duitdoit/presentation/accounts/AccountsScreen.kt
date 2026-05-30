@@ -20,6 +20,11 @@ import com.bigbrain.duitdoit.data.local.entity.AccountEntity
 import com.bigbrain.duitdoit.presentation.components.AppHeader
 import com.bigbrain.duitdoit.presentation.dashboard.formatCurrency
 import com.bigbrain.duitdoit.ui.theme.*
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.semantics.testTagsAsResourceId
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,7 +53,8 @@ fun AccountsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
-                    .testTag("btn_add_account"),
+                    .testTag("btn_add_account")
+                    .semantics { contentDescription = "btn_add_account" },
                 shape = RoundedCornerShape(100.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Primary)
             ) {
@@ -59,7 +65,8 @@ fun AccountsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
-                    .testTag("btn_transfer"),
+                    .testTag("btn_transfer")
+                    .semantics { contentDescription = "btn_transfer" },
                 shape = RoundedCornerShape(100.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Primary)
             ) {
@@ -70,7 +77,8 @@ fun AccountsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
-                    .testTag("btn_transfer_history"),
+                    .testTag("btn_transfer_history")
+                    .semantics { contentDescription = "btn_transfer_history" },
                 shape = RoundedCornerShape(100.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Surface),
             ) {
@@ -99,6 +107,7 @@ fun AccountItem(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
+            modifier = Modifier.semantics { testTagsAsResourceId = true},
             title = { Text("Delete Account", fontFamily = Poppins)},
             text = { Text("Are you sure you want to delete ${account.name}?", fontFamily = Poppins) },
             confirmButton = {
@@ -107,7 +116,7 @@ fun AccountItem(
                         onDelete()
                         showDeleteDialog = false
                     },
-                    modifier = Modifier.testTag("btn_confirm_delete_account"),
+                    modifier = Modifier.testTag("btn_confirm_delete_account").semantics{ contentDescription = "btn_confirm_delete_account" },
                     colors = ButtonDefaults.buttonColors(containerColor = Expense)
                 ) {
                     Text("Delete", fontFamily = Poppins)
@@ -121,7 +130,7 @@ fun AccountItem(
         )
     }
     Card(
-        modifier = Modifier.fillMaxWidth().testTag("account_item_${account.name}"),
+        modifier = Modifier.fillMaxWidth().testTag("account_item_${account.name}").semantics { contentDescription = "account_item_${account.name}" },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
@@ -146,7 +155,7 @@ fun AccountItem(
                     fontSize = 16.sp,
                     color = Primary
                 )
-                IconButton(onClick = { showDeleteDialog = true }, modifier = Modifier.testTag("btn_delete_account_${account.name}")) {
+                IconButton(onClick = { showDeleteDialog = true }, modifier = Modifier.testTag("btn_delete_account_${account.name}").semantics { contentDescription = "btn_delete_account_${account.name}" }) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_delete),
                         contentDescription = "Delete Account",

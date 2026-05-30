@@ -28,6 +28,8 @@ import com.patrykandpatrick.vico.compose.chart.Chart
 import com.patrykandpatrick.vico.compose.chart.column.columnChart
 import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
 import com.patrykandpatrick.vico.core.entry.entryOf
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -260,7 +262,7 @@ fun TransactionItem(
     onClick: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth().clickable { onClick() }.testTag("transaction_item_${transaction.id}"),
+        modifier = Modifier.fillMaxWidth().clickable { onClick() }.testTag("transaction_item_${transaction.id}").semantics { contentDescription = "transaction_item_${transaction.id}" },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {

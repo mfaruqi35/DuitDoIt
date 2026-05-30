@@ -15,6 +15,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.bigbrain.duitdoit.R
 import com.bigbrain.duitdoit.presentation.dashboard.formatCurrency
 import com.bigbrain.duitdoit.ui.theme.*
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -76,7 +79,8 @@ fun TransferScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .menuAnchor()
-                        .testTag("dropdown_from_account"),
+                        .testTag("dropdown_from_account")
+                        .semantics { contentDescription = "dropdown_from_account" },
                     shape = RoundedCornerShape(12.dp),
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = fromAccountExpanded)
@@ -90,7 +94,7 @@ fun TransferScreen(
                         DropdownMenuItem(
                             text = {
                                 Text(
-                                    "${account.name} (${formatCurrency(account.balance)})",
+                                    account.name,
                                     fontFamily = Poppins
                                 )
                             },
@@ -116,7 +120,8 @@ fun TransferScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .menuAnchor()
-                        .testTag("dropdown_to_account"),
+                        .testTag("dropdown_to_account")
+                        .semantics { contentDescription = "dropdown_to_account" },
                     shape = RoundedCornerShape(12.dp),
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = toAccountExpanded)
@@ -143,7 +148,7 @@ fun TransferScreen(
                 value = amount,
                 onValueChange = { amount = it },
                 label = { Text("Amount") },
-                modifier = Modifier.fillMaxWidth().testTag("field_transfer_amount"),
+                modifier = Modifier.fillMaxWidth().testTag("field_transfer_amount").semantics { contentDescription = "field_transfer_amount" },
                 shape = RoundedCornerShape(12.dp),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 prefix = { Text("Rp ") }
@@ -154,7 +159,7 @@ fun TransferScreen(
                 value = note,
                 onValueChange = { note = it },
                 label = { Text("Note (optional)") },
-                modifier = Modifier.fillMaxWidth().testTag("field_transfer_note"),
+                modifier = Modifier.fillMaxWidth().testTag("field_transfer_note").semantics { contentDescription = "field_transfer_note" },
                 shape = RoundedCornerShape(12.dp)
             )
 
@@ -179,7 +184,7 @@ fun TransferScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
-                    .testTag("btn_confirm_transfer"),
+                    .testTag("btn_confirm_transfer").semantics { contentDescription = "btn_confirm_transfer" },
                 shape = RoundedCornerShape(100.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Primary)
             ) {

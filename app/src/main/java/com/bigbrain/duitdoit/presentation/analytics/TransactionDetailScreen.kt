@@ -16,6 +16,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.bigbrain.duitdoit.R
 import com.bigbrain.duitdoit.ui.theme.*
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,6 +66,7 @@ fun TransactionDetailScreen(
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             title = { Text("Delete Transaction", fontFamily = Poppins) },
+            modifier = Modifier.semantics{ testTagsAsResourceId = true},
             text = { Text("Are you sure you want to delete this transaction?", fontFamily = Poppins) },
             confirmButton = {
                 Button(
@@ -70,7 +75,7 @@ fun TransactionDetailScreen(
                             viewModel.deleteTransaction(it) { onNavigateBack() }
                         }
                     },
-                    modifier = Modifier.testTag("btn_confirm_delete"),
+                    modifier = Modifier.testTag("btn_confirm_delete").semantics { contentDescription = "btn_confirm_delete" },
                     colors = ButtonDefaults.buttonColors(containerColor = Expense)
                 ) {
                     Text("Delete", fontFamily = Poppins)
@@ -97,7 +102,7 @@ fun TransactionDetailScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { showDeleteDialog = true }, modifier = Modifier.testTag("btn_delete_transactions")) {
+                    IconButton(onClick = { showDeleteDialog = true }, modifier = Modifier.testTag("btn_delete_transaction").semantics { contentDescription = "btn_delete_transaction" }) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_delete),
                             contentDescription = "Delete",
@@ -155,7 +160,7 @@ fun TransactionDetailScreen(
                 value = amount,
                 onValueChange = { amount = it },
                 label = { Text("Amount") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().semantics{ contentDescription = "field_amount"}.testTag("field_amount"),
                 shape = RoundedCornerShape(12.dp),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 prefix = { Text("Rp ") }
@@ -172,7 +177,9 @@ fun TransactionDetailScreen(
                     label = { Text("Account") },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .menuAnchor(),
+                        .menuAnchor()
+                        .semantics { contentDescription = "dropdown_account" }
+                        .testTag("dropdown_account"),
                     shape = RoundedCornerShape(12.dp),
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = accountExpanded)
@@ -229,7 +236,7 @@ fun TransactionDetailScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp)
-                    .testTag("btn_save_changes"),
+                    .testTag("btn_save_changes").semantics { contentDescription = "btn_save_changes" },
                 shape = RoundedCornerShape(100.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Primary)
             ) {

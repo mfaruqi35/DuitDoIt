@@ -37,6 +37,8 @@ import com.bigbrain.duitdoit.ui.theme.Poppins
 import com.bigbrain.duitdoit.ui.theme.Primary
 import com.bigbrain.duitdoit.ui.theme.Secondary
 import com.bigbrain.duitdoit.ui.theme.TextSecondary
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 
 data class BottomNavItem(
     val route: String,
@@ -117,7 +119,8 @@ fun BottomNavBares(navController: NavHostController, items: List<BottomNavItem>)
                                 restoreState = true
                             }
                         }
-                        .testTag("nav_${item.route}"),
+                        .testTag("nav_${item.route}")
+                        .semantics { contentDescription = "nav_${item.route}" },
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
@@ -152,7 +155,8 @@ fun BottomNavBares(navController: NavHostController, items: List<BottomNavItem>)
                         .offset(y=(-16).dp)
                         .background(Primary, RoundedCornerShape(100.dp))
                         .clickable { navController.navigate(Screen.AddTransaction.route) }
-                        .testTag("nav_add_transaction"),
+                        .testTag("nav_add_transaction")
+                        .semantics { contentDescription = "nav_add_transaction" },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -177,7 +181,8 @@ fun BottomNavBares(navController: NavHostController, items: List<BottomNavItem>)
                                 restoreState = true
                             }
                         }
-                        .testTag("nav_${item.route}"),
+                        .testTag("nav_${item.route}")
+                        .semantics { contentDescription = "nav_${item.route}" },
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
