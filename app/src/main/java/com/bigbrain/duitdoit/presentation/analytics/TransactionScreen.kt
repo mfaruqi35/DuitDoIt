@@ -53,6 +53,7 @@ fun TransactionScreen(
     val totalIncome by viewModel.totalIncome.collectAsState()
     val totalExpense by viewModel.totalExpense.collectAsState()
     val selectedPeriod by viewModel.selectedPeriod.collectAsState()
+    val chartSubLabel by viewModel.chartSubLabel.collectAsState()
 
     val periods = listOf("daily", "weekly", "monthly", "yearly")
     val periodLabels = mapOf(
@@ -178,7 +179,7 @@ fun TransactionScreen(
                 colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
                 Box(modifier = Modifier.padding(16.dp)) {
-                    TransactionBarChart(chartData = chartData)
+                    TransactionBarChart(chartData = chartData, selectedPeriod = selectedPeriod, subLabel = chartSubLabel)
                 }
             }
 
@@ -226,7 +227,7 @@ fun TransactionScreen(
 }
 
 @Composable
-fun TransactionBarChart(chartData: List<TransactionViewModel.ChartData>) {
+fun TransactionBarChart(chartData: List<TransactionViewModel.ChartData>, selectedPeriod: String, subLabel: String) {
     if (chartData.isEmpty()) {
         Box(
             modifier = Modifier
@@ -258,32 +259,44 @@ fun TransactionBarChart(chartData: List<TransactionViewModel.ChartData>) {
     val expenseColor = Expense.toArgb()
     val marker = rememberMarker()
 
-    Chart(
-        chart = columnChart(
-            columns = listOf(
-                lineComponent(
-                    color = Color(incomeColor),
-                    thickness = 8.dp,
-                    shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
-                ),
-                lineComponent(
-                    color = Color(expenseColor),
-                    thickness = 8.dp,
-                    shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
-                ),
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Chart(
+            chart = columnChart(
+                columns = listOf(
+                    lineComponent(
+                        color = Color(incomeColor),
+                        thickness = 8.dp,
+                        shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
+                    ),
+                    lineComponent(
+                        color = Color(expenseColor),
+                        thickness = 8.dp,
+                        shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
+                    )
+                )
+            ),
+            chartModelProducer = modelProducer,
+            bottomAxis = rememberBottomAxis(
+                valueFormatter = { value, _ ->
+                    chartData.getOrNull(value.toInt())?.label ?: ""
+                }
+            ),
+            marker = marker,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+        )
+
+        if (selectedPeriod != "yearly" && chartData.isNotEmpty()) {
+            Text(
+                text = subLabel,
+                fontFamily = Poppins,
+                fontSize = 12.sp,
+                color = Color.Black.copy(alpha = 0.7f),
+                modifier = Modifier.padding(top = 8.dp)
             )
-        ),
-        chartModelProducer = modelProducer,
-        bottomAxis = rememberBottomAxis(
-            valueFormatter = { value, _ ->
-                chartData.getOrNull(value.toInt())?.label ?: ""
-            }
-        ),
-        marker = marker,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(200.dp)
-    )
+        }
+    }
 }
 @Composable
 fun TransactionItem(

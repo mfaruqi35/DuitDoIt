@@ -31,6 +31,10 @@ class TransactionViewModel @Inject constructor(
 
     private val _chartData = MutableStateFlow<List<ChartData>>(emptyList())
     val chartData: StateFlow<List<ChartData>> = _chartData.asStateFlow()
+
+    private val _chartSubLabel = MutableStateFlow("")
+    val chartSubLabel: StateFlow<String> = _chartSubLabel.asStateFlow()
+
     private val _selectedTransaction = MutableStateFlow<TransactionEntity?>(null)
     val selectedTransaction: StateFlow<TransactionEntity?> = _selectedTransaction.asStateFlow()
     private val _totalIncome = MutableStateFlow(0.0)
@@ -155,23 +159,34 @@ class TransactionViewModel @Inject constructor(
         val calendar = java.util.Calendar.getInstance()
         val startDate = when (period) {
             "daily" -> {
+                calendar.add(java.util.Calendar.DAY_OF_YEAR, -4)
                 calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
                 calendar.set(java.util.Calendar.MINUTE, 0)
                 calendar.set(java.util.Calendar.SECOND, 0)
                 calendar.timeInMillis
             }
             "weekly" -> {
-                calendar.add(java.util.Calendar.DAY_OF_YEAR, -7)
+                calendar.add(java.util.Calendar.WEEK_OF_YEAR, -4)
+                calendar.set(java.util.Calendar.DAY_OF_WEEK, calendar.firstDayOfWeek)
+                calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
+                calendar.set(java.util.Calendar.MINUTE, 0)
+                calendar.set(java.util.Calendar.SECOND, 0)
                 calendar.timeInMillis
             }
             "monthly" -> {
+                calendar.add(java.util.Calendar.MONTH, -4)
                 calendar.set(java.util.Calendar.DAY_OF_MONTH, 1)
                 calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
+                calendar.set(java.util.Calendar.MINUTE, 0)
+                calendar.set(java.util.Calendar.SECOND, 0)
                 calendar.timeInMillis
             }
             "yearly" -> {
+                calendar.add(java.util.Calendar.YEAR, -4)
                 calendar.set(java.util.Calendar.DAY_OF_YEAR, 1)
                 calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
+                calendar.set(java.util.Calendar.MINUTE, 0)
+                calendar.set(java.util.Calendar.SECOND, 0)
                 calendar.timeInMillis
             }
             else -> 0L
@@ -180,33 +195,75 @@ class TransactionViewModel @Inject constructor(
     }
 
     private fun updateChartData(list: List<TransactionEntity>, period: String) {
-        val grouped = when (period) {
+        val localeId = Locale("id", "ID")
+        val template = mutableListOf<String>()
+
+        when (period) {
             "daily" -> {
-                val sdf = SimpleDateFormat("HH:00", Locale.ENGLISH)
-                list.groupBy { sdf.format(Date(it.date)) }
+                val sdf = SimpleDateFormat("dd", localeId)
+                for (i in 4 downTo 0) {
+                    val cal = java.util.Calendar.getInstance()
+                    cal.add(java.util.Calendar.DAY_OF_YEAR, -i)
+                    template.add(sdf.format(cal.time))
+                }
             }
             "weekly" -> {
-                val sdf = SimpleDateFormat("EEE", Locale.ENGLISH)
-                list.groupBy { sdf.format(Date(it.date)) }
+                val sdf = SimpleDateFormat("dd/M", localeId)
+                for (i in 4 downTo 0) {
+                    val cal = java.util.Calendar.getInstance()
+                    cal.add(java.util.Calendar.WEEK_OF_YEAR, -i)
+                    cal.set(java.util.Calendar.DAY_OF_WEEK, cal.firstDayOfWeek)
+                    template.add(sdf.format(cal.time))
+                }
             }
             "monthly" -> {
-                val sdf = SimpleDateFormat("dd", Locale.ENGLISH)
-                list.groupBy { sdf.format(Date(it.date)) }
+                val sdf = SimpleDateFormat("MMM", localeId)
+                for (i in 4 downTo 0) {
+                    val cal = java.util.Calendar.getInstance()
+                    cal.add(java.util.Calendar.MONTH, -i)
+                    template.add(sdf.format(cal.time))
+                }
             }
             "yearly" -> {
-                val sdf = SimpleDateFormat("MMM", Locale.ENGLISH)
-                list.groupBy { sdf.format(Date(it.date)) }
+                val sdf = SimpleDateFormat("yyyy", localeId)
+                for (i in 4 downTo 0) {
+                    val cal = java.util.Calendar.getInstance()
+                    cal.add(java.util.Calendar.YEAR, -i)
+                    template.add(sdf.format(cal.time))
+                }
             }
-            else -> emptyMap()
         }
 
-        _chartData.value = grouped.map { (label, transactions) ->
+        _chartData.value = template.map { label ->
+            val matchingTxs = list.filter { tx ->
+                val txLabel = when (period) {
+                    "daily" -> SimpleDateFormat("dd", localeId).format(Date(tx.date))
+                    "weekly" -> {
+                        val cal = java.util.Calendar.getInstance()
+                        cal.timeInMillis = tx.date
+                        cal.set(java.util.Calendar.DAY_OF_WEEK, cal.firstDayOfWeek)
+                        SimpleDateFormat("dd/M", localeId).format(cal.time)
+                    }
+                    "monthly" -> SimpleDateFormat("MMM", localeId).format(Date(tx.date))
+                    "yearly" -> SimpleDateFormat("yyyy", localeId).format(Date(tx.date))
+                    else -> ""
+                }
+                txLabel == label
+            }
+
             ChartData(
                 label = label,
-                income = transactions.filter { it.type == "income" }.sumOf { it.amount },
-                expense = transactions.filter { it.type == "expense" }.sumOf { it.amount }
+                income = matchingTxs.filter { it.type == "income" }.sumOf { it.amount },
+                expense = matchingTxs.filter { it.type == "expense" }.sumOf { it.amount }
             )
-        }.sortedBy { it.label }
+        }
+
+        val currentTime = System.currentTimeMillis()
+        _chartSubLabel.value = when (period) {
+            "daily" -> SimpleDateFormat("MMMM yyyy", localeId).format(Date(currentTime))
+            "weekly", "monthly" -> SimpleDateFormat("yyyy", localeId).format(Date(currentTime))
+            else -> ""
+        }
     }
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
