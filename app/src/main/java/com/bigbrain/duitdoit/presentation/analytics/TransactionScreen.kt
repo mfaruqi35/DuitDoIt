@@ -23,13 +23,25 @@ import com.bigbrain.duitdoit.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
 import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
-import com.patrykandpatrick.vico.compose.axis.vertical.rememberStartAxis
 import com.patrykandpatrick.vico.compose.chart.Chart
 import com.patrykandpatrick.vico.compose.chart.column.columnChart
 import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
 import com.patrykandpatrick.vico.core.entry.entryOf
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import com.patrykandpatrick.vico.compose.component.lineComponent
+import androidx.compose.ui.graphics.toArgb
+import android.graphics.Typeface
+import com.patrykandpatrick.vico.compose.component.textComponent
+import com.patrykandpatrick.vico.compose.dimensions.dimensionsOf
+import com.patrykandpatrick.vico.core.component.marker.MarkerComponent
+import com.patrykandpatrick.vico.core.marker.MarkerLabelFormatter
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
+import java.util.Locale
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.ForegroundColorSpan
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -242,15 +254,32 @@ fun TransactionBarChart(chartData: List<TransactionViewModel.ChartData>) {
         )
     }
 
+    val incomeColor = Income.toArgb()
+    val expenseColor = Expense.toArgb()
+    val marker = rememberMarker()
+
     Chart(
-        chart = columnChart(),
+        chart = columnChart(
+            columns = listOf(
+                lineComponent(
+                    color = Color(incomeColor),
+                    thickness = 8.dp,
+                    shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
+                ),
+                lineComponent(
+                    color = Color(expenseColor),
+                    thickness = 8.dp,
+                    shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
+                ),
+            )
+        ),
         chartModelProducer = modelProducer,
-        startAxis = rememberStartAxis(),
         bottomAxis = rememberBottomAxis(
             valueFormatter = { value, _ ->
                 chartData.getOrNull(value.toInt())?.label ?: ""
             }
         ),
+        marker = marker,
         modifier = Modifier
             .fillMaxWidth()
             .height(200.dp)
@@ -295,6 +324,44 @@ fun TransactionItem(
                 fontSize = 14.sp,
                 color = if (transaction.type == "income") Income else Expense
             )
+        }
+    }
+}
+
+@Composable
+fun rememberMarker(): MarkerComponent {
+    val label = textComponent(
+        color = Color.Black,
+        background = null,
+        padding = dimensionsOf(horizontal = 8.dp, vertical = 4.dp),
+        typeface = Typeface.DEFAULT_BOLD
+    )
+
+    return remember(label) {
+        MarkerComponent(label, null, null).apply {
+            labelFormatter = MarkerLabelFormatter { markedEntries, _ ->
+                val symbols = DecimalFormatSymbols(Locale.US)
+                val formatter = DecimalFormat("#,##0", symbols)
+                val spannable = SpannableStringBuilder()
+
+                markedEntries.forEachIndexed { index, marker ->
+                    val formattedValue = formatter.format(marker.entry.y)
+                    val startIndex = spannable.length
+                    spannable.append(formattedValue)
+
+                    spannable.setSpan(
+                        ForegroundColorSpan(marker.color),
+                        startIndex,
+                        spannable.length,
+                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+
+                    if (index < markedEntries.lastIndex) {
+                        spannable.append("\n")
+                    }
+                }
+                spannable
+            }
         }
     }
 }
