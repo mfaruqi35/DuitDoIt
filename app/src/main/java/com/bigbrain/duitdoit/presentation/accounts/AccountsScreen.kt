@@ -1,5 +1,6 @@
 package com.bigbrain.duitdoit.presentation.accounts
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -104,11 +105,27 @@ fun AccountItem(
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
 
+    val iconRes = when (account.icon) {
+        "ic_wallet" -> R.drawable.ic_wallet
+        "ic_bank" -> R.drawable.ic_credit
+        "ic_ewallet" -> R.drawable.ic_ewallet
+        "ic_savings" -> R.drawable.ic_savings
+        else -> R.drawable.ic_other
+    }
+
+    val iconColor = when (account.icon) {
+        "ic_wallet" -> AccountWallet
+        "ic_bank" -> AccountBank
+        "ic_ewallet" -> AccountEWallet
+        "ic_savings" -> AccountSavings
+        else -> AccountOther
+    }
+
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            modifier = Modifier.semantics { testTagsAsResourceId = true},
-            title = { Text("Delete Account", fontFamily = Poppins)},
+            modifier = Modifier.semantics { testTagsAsResourceId = true },
+            title = { Text("Delete Account", fontFamily = Poppins) },
             text = { Text("Are you sure you want to delete ${account.name}?", fontFamily = Poppins) },
             confirmButton = {
                 Button(
@@ -116,23 +133,30 @@ fun AccountItem(
                         onDelete()
                         showDeleteDialog = false
                     },
-                    modifier = Modifier.testTag("btn_confirm_delete_account").semantics{ contentDescription = "btn_confirm_delete_account" },
+                    modifier = Modifier
+                        .testTag("btn_confirm_delete_account")
+                        .semantics { contentDescription = "btn_confirm_delete_account" },
                     colors = ButtonDefaults.buttonColors(containerColor = Expense)
                 ) {
                     Text("Delete", fontFamily = Poppins)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false}) {
+                TextButton(onClick = { showDeleteDialog = false }) {
                     Text("Cancel", fontFamily = Poppins)
                 }
             }
         )
     }
+
     Card(
-        modifier = Modifier.fillMaxWidth().testTag("account_item_${account.name}").semantics { contentDescription = "account_item_${account.name}" },
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("account_item_${account.name}")
+            .semantics { contentDescription = "account_item_${account.name}" },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Border),
     ) {
         Row(
             modifier = Modifier
@@ -141,13 +165,31 @@ fun AccountItem(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = account.name,
-                fontFamily = Poppins,
-                fontWeight = FontWeight.Medium,
-                fontSize = 16.sp
-            )
-            Row(verticalAlignment = Alignment.CenterVertically){
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(iconColor, RoundedCornerShape(10.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = iconRes),
+                        contentDescription = account.icon,
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Text(
+                    text = account.name,
+                    fontFamily = Poppins,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 16.sp
+                )
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = formatCurrency(account.balance),
                     fontFamily = Poppins,
@@ -155,7 +197,12 @@ fun AccountItem(
                     fontSize = 16.sp,
                     color = Primary
                 )
-                IconButton(onClick = { showDeleteDialog = true }, modifier = Modifier.testTag("btn_delete_account_${account.name}").semantics { contentDescription = "btn_delete_account_${account.name}" }) {
+                IconButton(
+                    onClick = { showDeleteDialog = true },
+                    modifier = Modifier
+                        .testTag("btn_delete_account_${account.name}")
+                        .semantics { contentDescription = "btn_delete_account_${account.name}" }
+                ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_delete),
                         contentDescription = "Delete Account",

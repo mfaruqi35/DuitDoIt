@@ -182,15 +182,40 @@ fun ExtrasScreen(
 
 @Composable
 fun RegularPaymentCard(payment: RegularPaymentEntity) {
+    val iconColors = mapOf(
+        "ic_streaming" to Color(0xFFE50914),
+        "ic_iuran" to Color(0xFF16A34A),
+        "ic_utilities" to Color(0XFFEAB308),
+        "ic_software" to Color(0xFF8B5CF6),
+        "ic_cicilan" to Color(0xFF2563EB),
+        "ic_other" to Color(0xFF6B7280)
+    )
+    val iconColor = iconColors[payment.icon] ?: Color(0xFF6B7280)
+    val iconRes = getRegularPaymentIconRes(payment.icon)
+
     Card(
         modifier = Modifier.width(160.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Border)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(iconColor, RoundedCornerShape(10.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(id = iconRes),
+                    contentDescription = payment.name,
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
             Text(
                 text = payment.name,
                 fontFamily = Poppins,
@@ -241,12 +266,13 @@ fun WishlistItemCard(item: WishlistEntity, accounts: List<com.bigbrain.duitdoit.
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Border)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp),
+                .padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
