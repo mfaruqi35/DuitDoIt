@@ -8,6 +8,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -59,6 +64,14 @@ fun TransactionScreen(
     val periodOffset by viewModel.periodOffset.collectAsState()
     val periodLabel = viewModel.getPeriodLabel(selectedPeriod, periodOffset)
 
+    val selectedType by viewModel.selectedType.collectAsState()
+    val selectedAccountId by viewModel.selectedAccountId.collectAsState()
+    val selectedCategoryName by viewModel.selectedCategoryName.collectAsState()
+    val accounts by viewModel.accounts.collectAsState()
+    val categoryChips by viewModel.categoryChips.collectAsState()
+
+    var showFilterSheet by remember { mutableStateOf(false) }
+
     val periods = listOf("daily", "weekly", "monthly", "yearly")
     val periodLabels = mapOf(
         "daily" to "Day",
@@ -76,7 +89,18 @@ fun TransactionScreen(
 //                    titleContentColor = Color.White
 //                )
 //            )
-            AppHeader(title = "Analytics")
+            AppHeader(
+                title = "Analytics",
+                actions = {
+                    IconButton(onClick = { showFilterSheet = true }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_filter),
+                            contentDescription = "Filter",
+                            tint = Color.White
+                        )
+                    }
+                }
+            )
         }
     ) { innerPadding ->
         Column(
@@ -301,6 +325,110 @@ fun TransactionScreen(
                 }
             }
         }
+
+        if (showFilterSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showFilterSheet = false },
+                containerColor = Color.White
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 8.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Title
+                    Text(
+                        text = "Filter",
+                        fontFamily = Poppins,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 18.sp,
+                        color = TextPrimary,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
+
+                    // Type Section
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = "Type",
+                            fontFamily = Poppins,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 14.sp,
+                            color = TextSecondary
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            listOf("All", "Income", "Expense").forEach { type ->
+                                FilterChipItem(
+                                    label = type,
+                                    isSelected = selectedType.lowercase() == type.lowercase() || (selectedType == "All" && type == "All"),
+                                    onClick = { viewModel.setFilterType(if (type == "All") "All" else type.lowercase()) }
+                                )
+                            }
+                        }
+                    }
+
+                    // Account Section
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = "Account",
+                            fontFamily = Poppins,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 14.sp,
+                            color = TextSecondary
+                        )
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            FilterChipItem(
+                                label = "All",
+                                isSelected = selectedAccountId == null,
+                                onClick = { viewModel.setFilterAccount(null) }
+                            )
+                            accounts.forEach { account ->
+                                FilterChipItem(
+                                    label = account.name,
+                                    isSelected = selectedAccountId == account.id,
+                                    onClick = { viewModel.setFilterAccount(account.id) }
+                                )
+                            }
+                        }
+                    }
+
+                    // Category Section
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = "Category",
+                            fontFamily = Poppins,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 14.sp,
+                            color = TextSecondary
+                        )
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            FilterChipItem(
+                                label = "All",
+                                isSelected = selectedCategoryName == null,
+                                onClick = { viewModel.setFilterCategory(null) }
+                            )
+                            categoryChips.forEach { category ->
+                                FilterChipItem(
+                                    label = category.name,
+                                    isSelected = selectedCategoryName?.lowercase() == category.name.lowercase(),
+                                    onClick = { viewModel.setFilterCategory(category.name) },
+                                    colorHex = category.color
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+            }
+        }
     }
 }
 
@@ -460,4 +588,45 @@ fun rememberMarker(): MarkerComponent {
 fun formatDate(timestamp: Long): String {
     val sdf = SimpleDateFormat("EEE, dd MMM yyyy", Locale.getDefault())
     return sdf.format(Date(timestamp))
+}
+
+@Composable
+fun FilterChipItem(
+    label: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    colorHex: String? = null
+) {
+    val themeColor = if (colorHex != null) {
+        try {
+            Color(android.graphics.Color.parseColor(colorHex))
+        } catch (e: Exception) {
+            Primary
+        }
+    } else {
+        Primary
+    }
+
+    val backgroundColor = if (isSelected) themeColor else Color.White
+    val contentColor = if (isSelected) Color.White else TextPrimary
+    val borderColor = if (isSelected) Color.Transparent else if (colorHex != null) themeColor else Border
+
+    Box(
+        modifier = Modifier
+            .padding(end = 8.dp, bottom = 8.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(backgroundColor)
+            .border(1.dp, borderColor, RoundedCornerShape(20.dp))
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            fontFamily = Poppins,
+            fontSize = 14.sp,
+            color = contentColor,
+            fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal
+        )
+    }
 }

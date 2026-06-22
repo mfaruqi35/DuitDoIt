@@ -14,6 +14,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
 import java.util.Locale
 import javax.inject.Inject
@@ -27,23 +30,6 @@ class TransactionViewModel @Inject constructor(
     private val categoryRepository: CategoryRepository
 ) : ViewModel() {
 
-    private val _transactions = MutableStateFlow<List<TransactionEntity>>(emptyList())
-    val transactions: StateFlow<List<TransactionEntity>> = _transactions.asStateFlow()
-
-    private val _chartData = MutableStateFlow<List<ChartData>>(emptyList())
-    val chartData: StateFlow<List<ChartData>> = _chartData.asStateFlow()
-
-    private val _chartSubLabel = MutableStateFlow("")
-    val chartSubLabel: StateFlow<String> = _chartSubLabel.asStateFlow()
-
-    private val _selectedTransaction = MutableStateFlow<TransactionEntity?>(null)
-    val selectedTransaction: StateFlow<TransactionEntity?> = _selectedTransaction.asStateFlow()
-    private val _totalIncome = MutableStateFlow(0.0)
-    val totalIncome: StateFlow<Double> = _totalIncome.asStateFlow()
-
-    private val _totalExpense = MutableStateFlow(0.0)
-    val totalExpense: StateFlow<Double> = _totalExpense.asStateFlow()
-
     private val _selectedPeriod = MutableStateFlow("monthly")
     val selectedPeriod: StateFlow<String> = _selectedPeriod.asStateFlow()
 
@@ -55,6 +41,80 @@ class TransactionViewModel @Inject constructor(
 
     private val _categories = MutableStateFlow<List<CategoryEntity>>(emptyList())
     val categories: StateFlow<List<CategoryEntity>> = _categories.asStateFlow()
+
+    private val _selectedTransaction = MutableStateFlow<TransactionEntity?>(null)
+    val selectedTransaction: StateFlow<TransactionEntity?> = _selectedTransaction.asStateFlow()
+
+    private val _rawTransactions = MutableStateFlow<List<TransactionEntity>>(emptyList())
+
+    private val _selectedType = MutableStateFlow("All")
+    val selectedType: StateFlow<String> = _selectedType.asStateFlow()
+
+    private val _selectedAccountId = MutableStateFlow<Long?>(null)
+    val selectedAccountId: StateFlow<Long?> = _selectedAccountId.asStateFlow()
+
+    private val _selectedCategoryName = MutableStateFlow<String?>(null)
+    val selectedCategoryName: StateFlow<String?> = _selectedCategoryName.asStateFlow()
+
+    val transactions: StateFlow<List<TransactionEntity>> = combine(
+        _rawTransactions,
+        _selectedType,
+        _selectedAccountId,
+        _selectedCategoryName,
+        _categories
+    ) { rawList, type, accountId, categoryName, categoriesList ->
+        val categoryMap = categoriesList.associateBy { it.id }
+        rawList.filter { tx ->
+            val matchesType = type == "All" || tx.type.lowercase() == type.lowercase()
+            val matchesAccount = accountId == null || tx.accountId == accountId
+            val txCategoryName = categoryMap[tx.categoryId]?.name ?: "Other"
+            val matchesCategory = categoryName == null || txCategoryName.lowercase() == categoryName.lowercase()
+            matchesType && matchesAccount && matchesCategory
+        }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    val totalIncome: StateFlow<Double> = transactions.map { list ->
+        list.filter { it.type == "income" }.sumOf { it.amount }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, 0.0)
+
+    val totalExpense: StateFlow<Double> = transactions.map { list ->
+        list.filter { it.type == "expense" }.sumOf { it.amount }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, 0.0)
+
+    val chartData: StateFlow<List<ChartData>> = combine(
+        transactions,
+        _selectedPeriod,
+        _periodOffset
+    ) { list, period, offset ->
+        computeChartData(list, period, offset)
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    val chartSubLabel: StateFlow<String> = combine(
+        _selectedPeriod,
+        _periodOffset
+    ) { period, offset ->
+        val localeId = Locale("id", "ID")
+        val referenceTime = getPeriodDateRange(period, offset).second
+        when (period) {
+            "daily" -> SimpleDateFormat("MMMM yyyy", localeId).format(Date(referenceTime))
+            "weekly", "monthly" -> SimpleDateFormat("yyyy", localeId).format(Date(referenceTime))
+            else -> ""
+        }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, "")
+
+    val categoryChips: StateFlow<List<CategoryEntity>> = combine(
+        _categories,
+        _selectedType
+    ) { categoriesList, type ->
+        val filtered = when (type.lowercase()) {
+            "income" -> categoriesList.filter { it.type == "income" }
+            "expense" -> categoriesList.filter { it.type == "expense" }
+            else -> categoriesList
+        }
+        filtered.distinctBy { it.name }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+
 
     data class ChartData(
         val label: String,
@@ -290,7 +350,27 @@ class TransactionViewModel @Inject constructor(
         }
     }
 
-    private fun updateChartData(list: List<TransactionEntity>, period: String, offset: Int) {
+    fun setFilterType(type: String) {
+        _selectedType.value = type
+        // Reset category filter if it's no longer valid for the selected type
+        val currentCategory = _selectedCategoryName.value
+        if (currentCategory != null) {
+            val isValid = _categories.value.any { it.name == currentCategory && (type == "All" || it.type.lowercase() == type.lowercase()) }
+            if (!isValid) {
+                _selectedCategoryName.value = null
+            }
+        }
+    }
+
+    fun setFilterAccount(accountId: Long?) {
+        _selectedAccountId.value = accountId
+    }
+
+    fun setFilterCategory(categoryName: String?) {
+        _selectedCategoryName.value = categoryName
+    }
+
+    private fun computeChartData(list: List<TransactionEntity>, period: String, offset: Int): List<ChartData> {
         val localeId = Locale("id", "ID")
         val template = mutableListOf<String>()
 
@@ -330,7 +410,7 @@ class TransactionViewModel @Inject constructor(
             }
         }
 
-        _chartData.value = template.map { label ->
+        return template.map { label ->
             val matchingTxs = list.filter { tx ->
                 val txLabel = when (period) {
                     "daily" -> SimpleDateFormat("dd", localeId).format(Date(tx.date))
@@ -353,13 +433,6 @@ class TransactionViewModel @Inject constructor(
                 expense = matchingTxs.filter { it.type == "expense" }.sumOf { it.amount }
             )
         }
-
-        val referenceTime = getPeriodDateRange(period, offset).second
-        _chartSubLabel.value = when (period) {
-            "daily" -> SimpleDateFormat("MMMM yyyy", localeId).format(Date(referenceTime))
-            "weekly", "monthly" -> SimpleDateFormat("yyyy", localeId).format(Date(referenceTime))
-            else -> ""
-        }
     }
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -371,10 +444,7 @@ class TransactionViewModel @Inject constructor(
                 val (start, end) = getPeriodDateRange(period, offset)
                 transactionRepository.getTransactionsByPeriod(start, end)
             }.collect { list ->
-                _transactions.value = list
-                _totalIncome.value = list.filter { it.type == "income" }.sumOf { it.amount }
-                _totalExpense.value = list.filter { it.type == "expense" }.sumOf { it.amount }
-                updateChartData(list, _selectedPeriod.value, _periodOffset.value)
+                _rawTransactions.value = list
             }
         }
     }
