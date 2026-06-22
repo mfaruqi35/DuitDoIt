@@ -1,6 +1,7 @@
 package com.bigbrain.duitdoit.presentation.extras
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -29,6 +30,7 @@ import com.bigbrain.duitdoit.ui.theme.*
 fun WishlistListScreen(
     onNavigateBack: () -> Unit,
     onNavigateToAddWishlist: () -> Unit,
+    onNavigateToEditWishlist: (Long) -> Unit,
     viewModel: ExtrasViewModel = hiltViewModel()
 ) {
     val wishlistItems by viewModel.wishlistItems.collectAsState()
@@ -135,7 +137,7 @@ fun WishlistListScreen(
                         WishlistListItem(
                             item = item,
                             accounts = accounts,
-                            onDelete = { viewModel.deleteWishlistItem(item) }
+                            onEdit = { onNavigateToEditWishlist(item.id) }
                         )
                     }
                 }
@@ -180,7 +182,7 @@ fun WishlistListScreen(
 fun WishlistListItem(
     item: WishlistEntity,
     accounts: List<AccountEntity>,
-    onDelete: () -> Unit
+    onEdit: () -> Unit
 ) {
     val priorityColor = when (item.priority) {
         "high" -> PriorityHigh
@@ -205,7 +207,11 @@ fun WishlistListItem(
     val iconRes = getWishlistIconRes(item.icon)
 
     Card(
-        modifier = Modifier.fillMaxWidth().semantics{ contentDescription = "wishlist_item_${item.name}"}.testTag("wishlist_item_${item.name}"),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onEdit() }
+            .semantics{ contentDescription = "wishlist_item_${item.name}"}
+            .testTag("wishlist_item_${item.name}"),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
@@ -269,16 +275,6 @@ fun WishlistListItem(
                         color = TextSecondary
                     )
                 }
-            }
-            IconButton(
-                onClick = onDelete,
-                modifier = Modifier.semantics{ contentDescription = "btn_delete_wishlist_${item.name}"}.testTag("btn_delete_wishlist_${item.name}")
-            ) {
-                Icon(
-                    painter = painterResource(id = com.bigbrain.duitdoit.R.drawable.ic_delete),
-                    contentDescription = "Delete",
-                    tint = Expense
-                )
             }
         }
     }

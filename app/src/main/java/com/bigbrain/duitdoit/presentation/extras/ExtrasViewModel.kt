@@ -46,6 +46,8 @@ class ExtrasViewModel @Inject constructor(
         loadTotalTargetPrice()
     }
 
+    private val _selectedWishlist = MutableStateFlow<WishlistEntity?>(null)
+    val selectedWishlist: StateFlow<WishlistEntity?> = _selectedWishlist.asStateFlow()
     private fun loadWishlist() {
         viewModelScope.launch {
             wishlistRepository.getAllWishlistItems().collect {
@@ -54,6 +56,14 @@ class ExtrasViewModel @Inject constructor(
             }
         }
     }
+
+    fun loadWishlistById(id: Long){
+        viewModelScope.launch {
+            _selectedWishlist.value = wishlistRepository.getWishlistById(id)
+        }
+    }
+
+
 
     private fun loadRegularPayments() {
         viewModelScope.launch {
@@ -100,6 +110,16 @@ class ExtrasViewModel @Inject constructor(
                     icon = icon
                 )
             )
+        }
+    }
+
+    fun updateWishlist(id: Long, name: String, targetPrice: Double, priority: String, accountId: Long?, icon: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            val currentWishlist = wishlistRepository.getWishlistById(id)
+            if (currentWishlist != null) {
+                wishlistRepository.updateWishlistItem(currentWishlist.copy(name = name, targetPrice = targetPrice, priority = priority, accountId = accountId, icon = icon))
+                onSuccess()
+            }
         }
     }
 

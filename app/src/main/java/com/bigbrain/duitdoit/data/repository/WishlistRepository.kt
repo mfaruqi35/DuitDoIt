@@ -11,6 +11,7 @@ class WishlistRepository @Inject constructor(
     private val wishlistDao: WishlistDao
 ) {
     fun getAllWishlistItems(): Flow<List<WishlistEntity>> = wishlistDao.getAllWishlistItems()
+    suspend fun getWishlistById(id: Long): WishlistEntity? = wishlistDao.getWishlistById(id)
     fun getTotalWishlistCount(): Flow<Int> = wishlistDao.getTotalWishlistCount()
     fun getTotalTargetPrice(): Flow<Double?> = wishlistDao.getTotalTargetPrice()
     suspend fun insertWishlistItem(item: WishlistEntity): Long = wishlistDao.insertWishlistItem(item)

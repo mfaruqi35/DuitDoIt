@@ -9,6 +9,9 @@ interface WishlistDao {
     @Query("SELECT * FROM wishlist_items ORDER BY priority DESC, createdAt DESC")
     fun getAllWishlistItems(): Flow<List<WishlistEntity>>
 
+    @Query("SELECT * FROM wishlist_items WHERE id = :id")
+    suspend fun getWishlistById(id: Long): WishlistEntity?
+
     @Query("SELECT COUNT(*) FROM wishlist_items")
     fun getTotalWishlistCount(): Flow<Int>
 
@@ -17,7 +20,6 @@ interface WishlistDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertWishlistItem(item: WishlistEntity): Long
-
     @Update
     suspend fun updateWishlistItem(item: WishlistEntity)
 

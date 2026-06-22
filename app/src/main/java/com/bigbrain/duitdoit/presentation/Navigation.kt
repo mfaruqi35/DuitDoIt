@@ -18,6 +18,7 @@ import com.bigbrain.duitdoit.presentation.dashboard.DashboardScreen
 import com.bigbrain.duitdoit.presentation.extras.ExtrasScreen
 import com.bigbrain.duitdoit.presentation.extras.RegularPaymentListScreen
 import com.bigbrain.duitdoit.presentation.extras.WishlistListScreen
+import com.bigbrain.duitdoit.presentation.extras.EditWishlistScreen
 import com.bigbrain.duitdoit.presentation.analytics.TransactionDetailScreen
 import com.bigbrain.duitdoit.presentation.dashboard.CategoryDetailScreen
 import com.bigbrain.duitdoit.presentation.accounts.TransferHistoryScreen
@@ -44,6 +45,9 @@ sealed class Screen(val route: String){
     }
     object WishlistList : Screen("wishlist_list")
     object AddWishlist : Screen("add_wishlist")
+    object EditWishlist : Screen("edit_wishlist/{wishlistId}") {
+        fun createRoute(wishlistId: Long) = "edit_wishlist/$wishlistId"
+    }
     object RegularPaymentList : Screen("regular_payment_list")
     object AddRegularPayment : Screen("add_regular_payment")
 }
@@ -134,7 +138,10 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
         composable(Screen.WishlistList.route) {
             WishlistListScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToAddWishlist = { navController.navigate(Screen.AddWishlist.route) }
+                onNavigateToAddWishlist = { navController.navigate(Screen.AddWishlist.route) },
+                onNavigateToEditWishlist = { id ->
+                    navController.navigate(Screen.EditWishlist.createRoute(id))
+                }
             )
         }
 
@@ -142,6 +149,15 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
             AddWishlistScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
+        }
+        composable(Screen.EditWishlist.route) { backStackEntry ->
+            val wishlistId = backStackEntry.arguments?.getString("wishlistId")?.toLongOrNull()
+            wishlistId?.let {
+                EditWishlistScreen(
+                    wishlistId = it,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
         }
         composable(Screen.RegularPaymentList.route) {
             RegularPaymentListScreen(
