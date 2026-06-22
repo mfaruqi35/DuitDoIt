@@ -20,6 +20,8 @@ import com.bigbrain.duitdoit.data.local.entity.TransactionEntity
 import com.bigbrain.duitdoit.presentation.components.AppHeader
 import com.bigbrain.duitdoit.presentation.dashboard.formatCurrency
 import com.bigbrain.duitdoit.ui.theme.*
+import com.bigbrain.duitdoit.R
+import androidx.compose.ui.res.painterResource
 import java.text.SimpleDateFormat
 import java.util.*
 import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
@@ -54,6 +56,8 @@ fun TransactionScreen(
     val totalExpense by viewModel.totalExpense.collectAsState()
     val selectedPeriod by viewModel.selectedPeriod.collectAsState()
     val chartSubLabel by viewModel.chartSubLabel.collectAsState()
+    val periodOffset by viewModel.periodOffset.collectAsState()
+    val periodLabel = viewModel.getPeriodLabel(selectedPeriod, periodOffset)
 
     val periods = listOf("daily", "weekly", "monthly", "yearly")
     val periodLabels = mapOf(
@@ -107,7 +111,7 @@ fun TransactionScreen(
                 }
             }
 
-            // Summary card
+            // Summary card with pagination controls
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -115,56 +119,130 @@ fun TransactionScreen(
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
-                Row(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Column {
+                    // Pagination Row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(onClick = { viewModel.previousPeriod() }) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_prev),
+                                    contentDescription = "Previous Page",
+                                    tint = TextSecondary
+                                )
+                            }
+                            if (periodOffset > 0) {
+                                IconButton(onClick = { viewModel.resetPeriod() }) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_reset_left),
+                                        contentDescription = "Reset Page",
+                                        tint = Primary
+                                    )
+                                }
+                            } else {
+                                Spacer(modifier = Modifier.size(48.dp))
+                            }
+                        }
+
                         Text(
-                            text = "Income",
+                            text = periodLabel,
                             fontFamily = Poppins,
-                            fontSize = 12.sp,
-                            color = TextSecondary
-                        )
-                        Text(
-                            text = formatCurrency(totalIncome),
-                            fontFamily = Poppins,
-                            fontWeight = FontWeight.SemiBold,
                             fontSize = 14.sp,
-                            color = Income
+                            color = TextPrimary,
+                            fontWeight = FontWeight.Medium,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            modifier = Modifier.weight(1f)
                         )
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (periodOffset < 0) {
+                                IconButton(onClick = { viewModel.resetPeriod() }) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_reset2),
+                                        contentDescription = "Reset Page",
+                                        tint = Primary
+                                    )
+                                }
+                            } else {
+                                Spacer(modifier = Modifier.size(48.dp))
+                            }
+                            IconButton(onClick = { viewModel.nextPeriod() }) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_next),
+                                    contentDescription = "Next Page",
+                                    tint = TextSecondary
+                                )
+                            }
+                        }
                     }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "Net",
-                            fontFamily = Poppins,
-                            fontSize = 12.sp,
-                            color = TextSecondary
-                        )
-                        Text(
-                            text = formatCurrency(totalIncome - totalExpense),
-                            fontFamily = Poppins,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
-                            color = if (totalIncome >= totalExpense) Income else Expense
-                        )
-                    }
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = "Expense",
-                            fontFamily = Poppins,
-                            fontSize = 12.sp,
-                            color = TextSecondary
-                        )
-                        Text(
-                            text = formatCurrency(totalExpense),
-                            fontFamily = Poppins,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
-                            color = Expense
-                        )
+
+                    // Divider
+                    Spacer(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(1.dp)
+                            .background(Border)
+                    )
+
+                    // Summary Metrics Row
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text(
+                                text = "Income",
+                                fontFamily = Poppins,
+                                fontSize = 12.sp,
+                                color = TextSecondary
+                            )
+                            Text(
+                                text = formatCurrency(totalIncome),
+                                fontFamily = Poppins,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                color = Income
+                            )
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "Net",
+                                fontFamily = Poppins,
+                                fontSize = 12.sp,
+                                color = TextSecondary
+                            )
+                            Text(
+                                text = formatCurrency(totalIncome - totalExpense),
+                                fontFamily = Poppins,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                color = if (totalIncome >= totalExpense) Income else Expense
+                            )
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = "Expense",
+                                fontFamily = Poppins,
+                                fontSize = 12.sp,
+                                color = TextSecondary
+                            )
+                            Text(
+                                text = formatCurrency(totalExpense),
+                                fontFamily = Poppins,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                color = Expense
+                            )
+                        }
                     }
                 }
             }

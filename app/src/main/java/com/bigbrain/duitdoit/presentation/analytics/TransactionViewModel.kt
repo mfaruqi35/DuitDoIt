@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import java.util.Locale
 import javax.inject.Inject
@@ -45,6 +46,9 @@ class TransactionViewModel @Inject constructor(
 
     private val _selectedPeriod = MutableStateFlow("monthly")
     val selectedPeriod: StateFlow<String> = _selectedPeriod.asStateFlow()
+
+    private val _periodOffset = MutableStateFlow(0)
+    val periodOffset: StateFlow<Int> = _periodOffset.asStateFlow()
 
     private val _accounts = MutableStateFlow<List<AccountEntity>>(emptyList())
     val accounts: StateFlow<List<AccountEntity>> = _accounts.asStateFlow()
@@ -153,48 +157,140 @@ class TransactionViewModel @Inject constructor(
 
     fun selectPeriod(period: String) {
         _selectedPeriod.value = period
+        _periodOffset.value = 0
     }
 
-    private fun getDateRange(period: String): Pair<Long, Long> {
+    fun previousPeriod() {
+        _periodOffset.value -= 1
+    }
+
+    fun nextPeriod() {
+        _periodOffset.value += 1
+    }
+
+    fun resetPeriod() {
+        _periodOffset.value = 0
+    }
+
+    fun getPeriodDateRange(period: String, offset: Int = 0): Pair<Long, Long> {
         val calendar = java.util.Calendar.getInstance()
-        val startDate = when (period) {
+        return when (period) {
             "daily" -> {
-                calendar.add(java.util.Calendar.DAY_OF_YEAR, -4)
-                calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
-                calendar.set(java.util.Calendar.MINUTE, 0)
-                calendar.set(java.util.Calendar.SECOND, 0)
-                calendar.timeInMillis
+                val endCal = calendar.clone() as java.util.Calendar
+                endCal.add(java.util.Calendar.DAY_OF_YEAR, offset * 5)
+                endCal.set(java.util.Calendar.HOUR_OF_DAY, 23)
+                endCal.set(java.util.Calendar.MINUTE, 59)
+                endCal.set(java.util.Calendar.SECOND, 59)
+                endCal.set(java.util.Calendar.MILLISECOND, 999)
+                val end = endCal.timeInMillis
+
+                val startCal = calendar.clone() as java.util.Calendar
+                startCal.add(java.util.Calendar.DAY_OF_YEAR, offset * 5 - 4)
+                startCal.set(java.util.Calendar.HOUR_OF_DAY, 0)
+                startCal.set(java.util.Calendar.MINUTE, 0)
+                startCal.set(java.util.Calendar.SECOND, 0)
+                startCal.set(java.util.Calendar.MILLISECOND, 0)
+                val start = startCal.timeInMillis
+
+                Pair(start, end)
             }
             "weekly" -> {
-                calendar.add(java.util.Calendar.WEEK_OF_YEAR, -4)
-                calendar.set(java.util.Calendar.DAY_OF_WEEK, calendar.firstDayOfWeek)
-                calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
-                calendar.set(java.util.Calendar.MINUTE, 0)
-                calendar.set(java.util.Calendar.SECOND, 0)
-                calendar.timeInMillis
+                val endCal = calendar.clone() as java.util.Calendar
+                endCal.add(java.util.Calendar.WEEK_OF_YEAR, offset * 5)
+                endCal.set(java.util.Calendar.DAY_OF_WEEK, endCal.firstDayOfWeek)
+                endCal.add(java.util.Calendar.DAY_OF_WEEK, 6)
+                endCal.set(java.util.Calendar.HOUR_OF_DAY, 23)
+                endCal.set(java.util.Calendar.MINUTE, 59)
+                endCal.set(java.util.Calendar.SECOND, 59)
+                endCal.set(java.util.Calendar.MILLISECOND, 999)
+                val end = endCal.timeInMillis
+
+                val startCal = calendar.clone() as java.util.Calendar
+                startCal.add(java.util.Calendar.WEEK_OF_YEAR, offset * 5 - 4)
+                startCal.set(java.util.Calendar.DAY_OF_WEEK, startCal.firstDayOfWeek)
+                startCal.set(java.util.Calendar.HOUR_OF_DAY, 0)
+                startCal.set(java.util.Calendar.MINUTE, 0)
+                startCal.set(java.util.Calendar.SECOND, 0)
+                startCal.set(java.util.Calendar.MILLISECOND, 0)
+                val start = startCal.timeInMillis
+
+                Pair(start, end)
             }
             "monthly" -> {
-                calendar.add(java.util.Calendar.MONTH, -4)
-                calendar.set(java.util.Calendar.DAY_OF_MONTH, 1)
-                calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
-                calendar.set(java.util.Calendar.MINUTE, 0)
-                calendar.set(java.util.Calendar.SECOND, 0)
-                calendar.timeInMillis
+                val endCal = calendar.clone() as java.util.Calendar
+                endCal.add(java.util.Calendar.MONTH, offset * 5)
+                endCal.set(java.util.Calendar.DAY_OF_MONTH, endCal.getActualMaximum(java.util.Calendar.DAY_OF_MONTH))
+                endCal.set(java.util.Calendar.HOUR_OF_DAY, 23)
+                endCal.set(java.util.Calendar.MINUTE, 59)
+                endCal.set(java.util.Calendar.SECOND, 59)
+                endCal.set(java.util.Calendar.MILLISECOND, 999)
+                val end = endCal.timeInMillis
+
+                val startCal = calendar.clone() as java.util.Calendar
+                startCal.add(java.util.Calendar.MONTH, offset * 5 - 4)
+                startCal.set(java.util.Calendar.DAY_OF_MONTH, 1)
+                startCal.set(java.util.Calendar.HOUR_OF_DAY, 0)
+                startCal.set(java.util.Calendar.MINUTE, 0)
+                startCal.set(java.util.Calendar.SECOND, 0)
+                startCal.set(java.util.Calendar.MILLISECOND, 0)
+                val start = startCal.timeInMillis
+
+                Pair(start, end)
             }
             "yearly" -> {
-                calendar.add(java.util.Calendar.YEAR, -4)
-                calendar.set(java.util.Calendar.DAY_OF_YEAR, 1)
-                calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
-                calendar.set(java.util.Calendar.MINUTE, 0)
-                calendar.set(java.util.Calendar.SECOND, 0)
-                calendar.timeInMillis
+                val endCal = calendar.clone() as java.util.Calendar
+                endCal.add(java.util.Calendar.YEAR, offset * 5)
+                endCal.set(java.util.Calendar.DAY_OF_YEAR, endCal.getActualMaximum(java.util.Calendar.DAY_OF_YEAR))
+                endCal.set(java.util.Calendar.HOUR_OF_DAY, 23)
+                endCal.set(java.util.Calendar.MINUTE, 59)
+                endCal.set(java.util.Calendar.SECOND, 59)
+                endCal.set(java.util.Calendar.MILLISECOND, 999)
+                val end = endCal.timeInMillis
+
+                val startCal = calendar.clone() as java.util.Calendar
+                startCal.add(java.util.Calendar.YEAR, offset * 5 - 4)
+                startCal.set(java.util.Calendar.DAY_OF_YEAR, 1)
+                startCal.set(java.util.Calendar.HOUR_OF_DAY, 0)
+                startCal.set(java.util.Calendar.MINUTE, 0)
+                startCal.set(java.util.Calendar.SECOND, 0)
+                startCal.set(java.util.Calendar.MILLISECOND, 0)
+                val start = startCal.timeInMillis
+
+                Pair(start, end)
             }
-            else -> 0L
+            else -> Pair(0L, Long.MAX_VALUE)
         }
-        return Pair(startDate, Long.MAX_VALUE)
     }
 
-    private fun updateChartData(list: List<TransactionEntity>, period: String) {
+    fun getPeriodLabel(period: String, offset: Int): String {
+        val (start, end) = getPeriodDateRange(period, offset)
+        val localeId = Locale("id", "ID")
+        return when (period) {
+            "daily" -> {
+                val sdfStart = SimpleDateFormat("dd MMM yyyy", localeId)
+                val sdfEnd = SimpleDateFormat("dd MMM yyyy", localeId)
+                "${sdfStart.format(Date(start))} - ${sdfEnd.format(Date(end))}"
+            }
+            "weekly" -> {
+                val sdfStart = SimpleDateFormat("dd MMM", localeId)
+                val sdfEnd = SimpleDateFormat("dd MMM yyyy", localeId)
+                "${sdfStart.format(Date(start))} - ${sdfEnd.format(Date(end))}"
+            }
+            "monthly" -> {
+                val sdfStart = SimpleDateFormat("MMM", localeId)
+                val sdfEnd = SimpleDateFormat("MMMM yyyy", localeId)
+                "${sdfStart.format(Date(start))} - ${sdfEnd.format(Date(end))}"
+            }
+            "yearly" -> {
+                val sdfStart = SimpleDateFormat("yyyy", localeId)
+                val sdfEnd = SimpleDateFormat("yyyy", localeId)
+                "${sdfStart.format(Date(start))} - ${sdfEnd.format(Date(end))}"
+            }
+            else -> ""
+        }
+    }
+
+    private fun updateChartData(list: List<TransactionEntity>, period: String, offset: Int) {
         val localeId = Locale("id", "ID")
         val template = mutableListOf<String>()
 
@@ -203,7 +299,7 @@ class TransactionViewModel @Inject constructor(
                 val sdf = SimpleDateFormat("dd", localeId)
                 for (i in 4 downTo 0) {
                     val cal = java.util.Calendar.getInstance()
-                    cal.add(java.util.Calendar.DAY_OF_YEAR, -i)
+                    cal.add(java.util.Calendar.DAY_OF_YEAR, offset * 5 - i)
                     template.add(sdf.format(cal.time))
                 }
             }
@@ -211,7 +307,7 @@ class TransactionViewModel @Inject constructor(
                 val sdf = SimpleDateFormat("dd/M", localeId)
                 for (i in 4 downTo 0) {
                     val cal = java.util.Calendar.getInstance()
-                    cal.add(java.util.Calendar.WEEK_OF_YEAR, -i)
+                    cal.add(java.util.Calendar.WEEK_OF_YEAR, offset * 5 - i)
                     cal.set(java.util.Calendar.DAY_OF_WEEK, cal.firstDayOfWeek)
                     template.add(sdf.format(cal.time))
                 }
@@ -220,7 +316,7 @@ class TransactionViewModel @Inject constructor(
                 val sdf = SimpleDateFormat("MMM", localeId)
                 for (i in 4 downTo 0) {
                     val cal = java.util.Calendar.getInstance()
-                    cal.add(java.util.Calendar.MONTH, -i)
+                    cal.add(java.util.Calendar.MONTH, offset * 5 - i)
                     template.add(sdf.format(cal.time))
                 }
             }
@@ -228,7 +324,7 @@ class TransactionViewModel @Inject constructor(
                 val sdf = SimpleDateFormat("yyyy", localeId)
                 for (i in 4 downTo 0) {
                     val cal = java.util.Calendar.getInstance()
-                    cal.add(java.util.Calendar.YEAR, -i)
+                    cal.add(java.util.Calendar.YEAR, offset * 5 - i)
                     template.add(sdf.format(cal.time))
                 }
             }
@@ -258,10 +354,10 @@ class TransactionViewModel @Inject constructor(
             )
         }
 
-        val currentTime = System.currentTimeMillis()
+        val referenceTime = getPeriodDateRange(period, offset).second
         _chartSubLabel.value = when (period) {
-            "daily" -> SimpleDateFormat("MMMM yyyy", localeId).format(Date(currentTime))
-            "weekly", "monthly" -> SimpleDateFormat("yyyy", localeId).format(Date(currentTime))
+            "daily" -> SimpleDateFormat("MMMM yyyy", localeId).format(Date(referenceTime))
+            "weekly", "monthly" -> SimpleDateFormat("yyyy", localeId).format(Date(referenceTime))
             else -> ""
         }
     }
@@ -269,14 +365,16 @@ class TransactionViewModel @Inject constructor(
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     private fun observeTransactions() {
         viewModelScope.launch {
-            _selectedPeriod.flatMapLatest { period ->
-                val (start, end) = getDateRange(period)
+            combine(_selectedPeriod, _periodOffset) { period, offset ->
+                Pair(period, offset)
+            }.flatMapLatest { (period, offset) ->
+                val (start, end) = getPeriodDateRange(period, offset)
                 transactionRepository.getTransactionsByPeriod(start, end)
             }.collect { list ->
                 _transactions.value = list
                 _totalIncome.value = list.filter { it.type == "income" }.sumOf { it.amount }
                 _totalExpense.value = list.filter { it.type == "expense" }.sumOf { it.amount }
-                updateChartData(list, _selectedPeriod.value)
+                updateChartData(list, _selectedPeriod.value, _periodOffset.value)
             }
         }
     }
