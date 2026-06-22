@@ -136,12 +136,6 @@ fun BottomNavBares(navController: NavHostController, items: List<BottomNavItem>)
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-//                    Text(
-//                        text = item.label,
-//                        fontFamily = Poppins,
-//                        fontSize = 10.sp,
-//                        color = if (currentRoute == item.route) Primary else TextSecondary
-//                    )
                 }
             }
 
@@ -198,12 +192,6 @@ fun BottomNavBares(navController: NavHostController, items: List<BottomNavItem>)
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-//                    Text(
-//                        text = item.label,
-//                        fontFamily = Poppins,
-//                        fontSize = 10.sp,
-//                        color = if (currentRoute == item.route) Primary else TextSecondary
-//                    )
                 }
             }
         }

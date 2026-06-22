@@ -82,13 +82,6 @@ fun TransactionScreen(
 
     Scaffold(
         topBar = {
-//            TopAppBar(
-//                title = { Text("Transactions", fontFamily = Poppins) },
-//                colors = TopAppBarDefaults.topAppBarColors(
-//                    containerColor = Primary,
-//                    titleContentColor = Color.White
-//                )
-//            )
             AppHeader(
                 title = "Analytics",
                 actions = {

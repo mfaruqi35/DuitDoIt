@@ -51,7 +51,6 @@ fun AddTransactionScreen(
 
     val filteredCategories = categories.filter { it.type == selectedType }
     val selectedAccount = accounts.find { it.id == selectedAccountId }
-//    val selectedCategory = categories.find { it.id == selectedCategoryId }
     val errorMessage by viewModel.errorMessage.collectAsState()
 
     var showDatePicker by remember { mutableStateOf(false) }

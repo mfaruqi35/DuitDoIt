@@ -84,8 +84,6 @@ class DashboardViewModel @Inject constructor(
         loadAccounts()
         loadTotalBalance()
         updateDisplayBalance()
-//        val (start, end) = getPeriodDateRange("monthly")
-//        loadCategoryData(start, end)
         observeCategoryData()
         loadRegularPayments()
     }
