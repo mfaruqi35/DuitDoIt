@@ -51,7 +51,6 @@ fun AddTransactionScreen(
 
     val filteredCategories = categories.filter { it.type == selectedType }
     val selectedAccount = accounts.find { it.id == selectedAccountId }
-//    val selectedCategory = categories.find { it.id == selectedCategoryId }
     val errorMessage by viewModel.errorMessage.collectAsState()
 
     var showDatePicker by remember { mutableStateOf(false) }
@@ -262,7 +261,7 @@ fun AddTransactionScreen(
                 shape = RoundedCornerShape(12.dp)
             )
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Button(
                 onClick = {
