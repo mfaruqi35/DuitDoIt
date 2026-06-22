@@ -107,15 +107,47 @@ fun DashboardScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            val periods = listOf("daily", "weekly", "monthly", "yearly")
+            val periodLabels = mapOf(
+                "daily" to "Day",
+                "weekly" to "Week",
+                "monthly" to "Month",
+                "yearly" to "Year"
+            )
+            periods.forEach { period ->
+                FilterChip(
+                    selected = selectedPeriod == period,
+                    onClick = { viewModel.selectPeriod(period) },
+                    label = {
+                        Text(
+                            periodLabels[period] ?: period,
+                            fontFamily = Poppins
+                        )
+                    },
+                    modifier = Modifier.weight(1f),
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = Primary,
+                        selectedLabelColor = Color.White
+                    )
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         ChartCard(
             selectedTab = selectedTab,
-            selectedPeriod = selectedPeriod,
             periodOffset = periodOffset,
             periodLabel = periodLabel,
             categoryExpenses = categoryExpenses,
             categoryIncomes = categoryIncomes,
             onTabSelected = { viewModel.selectTab(it) },
-            onPeriodSelected = { viewModel.selectPeriod(it) },
             onPreviousPeriod = { viewModel.previousPeriod() },
             onNextPeriod = { viewModel.nextPeriod() },
             onResetPeriod = { viewModel.resetPeriod() },
@@ -134,13 +166,11 @@ fun DashboardScreen(
 @Composable
 fun ChartCard(
     selectedTab: String,
-    selectedPeriod: String,
     periodOffset: Int,
     periodLabel: String,
     categoryExpenses: Map<String, Double>,
     categoryIncomes: Map<String, Double>,
     onTabSelected: (String) -> Unit,
-    onPeriodSelected: (String) -> Unit,
     onPreviousPeriod: () -> Unit,
     onNextPeriod: () -> Unit,
     onResetPeriod: () -> Unit,
@@ -149,14 +179,6 @@ fun ChartCard(
     regularPayments: List<com.bigbrain.duitdoit.data.local.entity.RegularPaymentEntity>,
     onNavigateToRegularPaymentList: () -> Unit,
 ) {
-    val periods = listOf("daily", "weekly", "monthly", "yearly")
-    val periodLabels = mapOf(
-        "daily" to "Day",
-        "weekly" to "Week",
-        "monthly" to "Month",
-        "yearly" to "Year"
-    )
-
     val data = if (selectedTab == "expense") categoryExpenses else categoryIncomes
     val total = data.values.sum()
     val categoryColors = mapOf(
@@ -208,30 +230,6 @@ fun ChartCard(
                     )
                 }
             }
-
-            // Period filter
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                periods.forEach { period ->
-                    FilterChip(
-                        selected = selectedPeriod == period,
-                        onClick = { onPeriodSelected(period) },
-                        label = {
-                            Text(
-                                periodLabels[period] ?: period,
-                                fontFamily = Poppins
-                            )
-                        },
-                        modifier = Modifier.weight(1f),
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = Primary,
-                            selectedLabelColor = Color.White
-                        )
-                    )
-                }
-            }
             Row (
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -263,8 +261,8 @@ fun ChartCard(
                     fontSize = 14.sp,
                     color = TextPrimary,
                     fontWeight = FontWeight.Medium,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    modifier = Modifier.weight(1f)
                 )
                 Row {
                     if (periodOffset < 0){
@@ -291,7 +289,7 @@ fun ChartCard(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp),
+                        .height(220.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -304,7 +302,7 @@ fun ChartCard(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp),
+                        .height(220.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     DonutChart(
@@ -372,7 +370,7 @@ fun DonutChart(
     }
 
     Box(contentAlignment = Alignment.Center) {
-        Canvas(modifier = Modifier.size(180.dp)) {
+        Canvas(modifier = Modifier.size(190.dp)) {
             var startAngle = -90f
             sweepAngles.forEach { (category, sweep) ->
                 drawArc(

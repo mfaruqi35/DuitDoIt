@@ -191,7 +191,7 @@ fun AddRegularPaymentScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Button(
                 onClick = {

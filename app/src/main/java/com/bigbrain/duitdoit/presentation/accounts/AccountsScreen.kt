@@ -44,57 +44,62 @@ fun AccountsScreen(
             AppHeader(title = "Accounts")
         }
     ) { innerPadding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(horizontal = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(vertical = 24.dp)
         ) {
-            Button(
-                onClick = onNavigateToAddAccount,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
-                    .testTag("btn_add_account")
-                    .semantics { contentDescription = "btn_add_account" },
-                shape = RoundedCornerShape(100.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Primary)
-            ) {
-                Text("Add Account", fontFamily = Poppins)
+            item {
+                Button(
+                    onClick = onNavigateToAddAccount,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                        .testTag("btn_add_account")
+                        .semantics { contentDescription = "btn_add_account" },
+                    shape = RoundedCornerShape(100.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Primary)
+                ) {
+                    Text("Add Account", fontFamily = Poppins)
+                }
             }
-            Button(
-                onClick = onNavigateToTransfer,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
-                    .testTag("btn_transfer")
-                    .semantics { contentDescription = "btn_transfer" },
-                shape = RoundedCornerShape(100.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Primary)
-            ) {
-                Text("Transfer", fontFamily = Poppins)
+            item {
+                Button(
+                    onClick = onNavigateToTransfer,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                        .testTag("btn_transfer")
+                        .semantics { contentDescription = "btn_transfer" },
+                    shape = RoundedCornerShape(100.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Primary)
+                ) {
+                    Text("Transfer", fontFamily = Poppins)
+                }
             }
-            Button(
-                onClick = onNavigateToTransferHistory,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
-                    .testTag("btn_transfer_history")
-                    .semantics { contentDescription = "btn_transfer_history" },
-                shape = RoundedCornerShape(100.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Surface),
-            ) {
-                Text("Transfer History", fontFamily = Poppins, color = Primary)
+            item {
+                Button(
+                    onClick = onNavigateToTransferHistory,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                        .testTag("btn_transfer_history")
+                        .semantics { contentDescription = "btn_transfer_history" },
+                    shape = RoundedCornerShape(100.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Surface),
+                ) {
+                    Text("Transfer History", fontFamily = Poppins, color = Primary)
+                }
             }
 
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(accounts) { account ->
-                    AccountItem(
-                        account = account,
-                        onClick = { onNavigateToEditAccount(account.id) }
-                    )
-                }
+            items(accounts) { account ->
+                AccountItem(
+                    account = account,
+                    onClick = { onNavigateToEditAccount(account.id) }
+                )
             }
         }
     }

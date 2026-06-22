@@ -20,6 +20,9 @@ import androidx.compose.ui.semantics.semantics
 
 
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransferScreen(
@@ -63,7 +66,8 @@ fun TransferScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(24.dp),
+                .padding(24.dp)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // From account
@@ -167,7 +171,7 @@ fun TransferScreen(
                 Text(text = it, color = Expense, fontFamily = Poppins)
             }
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Button(
                 onClick = {

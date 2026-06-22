@@ -103,219 +103,228 @@ fun TransactionScreen(
             )
         }
     ) { innerPadding ->
-        Column(
+        val chartData by viewModel.chartData.collectAsState()
+
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(Surface)
+                .background(Surface),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(bottom = 16.dp)
         ) {
             // Period filter
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                periods.forEach { period ->
-                    FilterChip(
-                        selected = selectedPeriod == period,
-                        onClick = { viewModel.selectPeriod(period) },
-                        label = {
-                            Text(
-                                periodLabels[period] ?: period,
-                                fontFamily = Poppins
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    periods.forEach { period ->
+                        FilterChip(
+                            selected = selectedPeriod == period,
+                            onClick = { viewModel.selectPeriod(period) },
+                            label = {
+                                Text(
+                                    periodLabels[period] ?: period,
+                                    fontFamily = Poppins
+                                )
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = Primary,
+                                selectedLabelColor = Color.White
                             )
-                        },
-                        modifier = Modifier.weight(1f),
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = Primary,
-                            selectedLabelColor = Color.White
                         )
-                    )
+                    }
                 }
             }
 
             // Summary card with pagination controls
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
-            ) {
-                Column(
+            item {
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                        .padding(horizontal = 16.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
                 ) {
-                    // Pagination Row
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconButton(onClick = { viewModel.previousPeriod() }) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_prev),
-                                    contentDescription = "Previous Page",
-                                    tint = TextSecondary
-                                )
-                            }
-                            if (periodOffset > 0) {
-                                IconButton(onClick = { viewModel.resetPeriod() }) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.ic_reset_left),
-                                        contentDescription = "Reset Page",
-                                        tint = Primary
-                                    )
-                                }
-                            } else {
-                                Spacer(modifier = Modifier.size(48.dp))
-                            }
-                        }
-
-                        Text(
-                            text = periodLabel,
-                            fontFamily = Poppins,
-                            fontSize = 14.sp,
-                            color = TextPrimary,
-                            fontWeight = FontWeight.Medium,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                            modifier = Modifier.weight(1f)
-                        )
-
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            if (periodOffset < 0) {
-                                IconButton(onClick = { viewModel.resetPeriod() }) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.ic_reset2),
-                                        contentDescription = "Reset Page",
-                                        tint = Primary
-                                    )
-                                }
-                            } else {
-                                Spacer(modifier = Modifier.size(48.dp))
-                            }
-                            IconButton(onClick = { viewModel.nextPeriod() }) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_next),
-                                    contentDescription = "Next Page",
-                                    tint = TextSecondary
-                                )
-                            }
-                        }
-                    }
-
-                    // Divider
-                    Spacer(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(1.dp)
-                            .background(Border)
-                    )
-
-                    // Summary Metrics Row
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Column {
+                        // Pagination Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(onClick = { viewModel.previousPeriod() }) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_prev),
+                                        contentDescription = "Previous Page",
+                                        tint = TextSecondary
+                                    )
+                                }
+                                if (periodOffset > 0) {
+                                    IconButton(onClick = { viewModel.resetPeriod() }) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_reset_left),
+                                            contentDescription = "Reset Page",
+                                            tint = Primary
+                                        )
+                                    }
+                                } else {
+                                    Spacer(modifier = Modifier.size(48.dp))
+                                }
+                            }
+
                             Text(
-                                text = "Income",
+                                text = periodLabel,
                                 fontFamily = Poppins,
-                                fontSize = 12.sp,
-                                color = TextSecondary
-                            )
-                            Text(
-                                text = formatCurrency(totalIncome),
-                                fontFamily = Poppins,
-                                fontWeight = FontWeight.SemiBold,
                                 fontSize = 14.sp,
-                                color = Income
+                                color = TextPrimary,
+                                fontWeight = FontWeight.Medium,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                modifier = Modifier.weight(1f)
                             )
+
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                if (periodOffset < 0) {
+                                    IconButton(onClick = { viewModel.resetPeriod() }) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.ic_reset2),
+                                            contentDescription = "Reset Page",
+                                            tint = Primary
+                                        )
+                                    }
+                                } else {
+                                    Spacer(modifier = Modifier.size(48.dp))
+                                }
+                                IconButton(onClick = { viewModel.nextPeriod() }) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_next),
+                                        contentDescription = "Next Page",
+                                        tint = TextSecondary
+                                    )
+                                }
+                            }
                         }
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = "Net",
-                                fontFamily = Poppins,
-                                fontSize = 12.sp,
-                                color = TextSecondary
-                            )
-                            Text(
-                                text = formatCurrency(totalIncome - totalExpense),
-                                fontFamily = Poppins,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 14.sp,
-                                color = if (totalIncome >= totalExpense) Income else Expense
-                            )
-                        }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(
-                                text = "Expense",
-                                fontFamily = Poppins,
-                                fontSize = 12.sp,
-                                color = TextSecondary
-                            )
-                            Text(
-                                text = formatCurrency(totalExpense),
-                                fontFamily = Poppins,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 14.sp,
-                                color = Expense
-                            )
+
+                        // Divider
+                        Spacer(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(1.dp)
+                                .background(Border)
+                        )
+
+                        // Summary Metrics Row
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Income",
+                                    fontFamily = Poppins,
+                                    fontSize = 12.sp,
+                                    color = TextSecondary
+                                )
+                                Text(
+                                    text = formatCurrency(totalIncome),
+                                    fontFamily = Poppins,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 14.sp,
+                                    color = Income
+                                )
+                            }
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "Net",
+                                    fontFamily = Poppins,
+                                    fontSize = 12.sp,
+                                    color = TextSecondary
+                                )
+                                Text(
+                                    text = formatCurrency(totalIncome - totalExpense),
+                                    fontFamily = Poppins,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 14.sp,
+                                    color = if (totalIncome >= totalExpense) Income else Expense
+                                )
+                            }
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text(
+                                    text = "Expense",
+                                    fontFamily = Poppins,
+                                    fontSize = 12.sp,
+                                    color = TextSecondary
+                                )
+                                Text(
+                                    text = formatCurrency(totalExpense),
+                                    fontFamily = Poppins,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 14.sp,
+                                    color = Expense
+                                )
+                            }
                         }
                     }
                 }
             }
-            val chartData by viewModel.chartData.collectAsState()
 
             // Bar chart
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
-            ) {
-                Box(modifier = Modifier.padding(16.dp)) {
-                    TransactionBarChart(chartData = chartData, selectedPeriod = selectedPeriod, subLabel = chartSubLabel)
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                ) {
+                    Box(modifier = Modifier.padding(16.dp)) {
+                        TransactionBarChart(chartData = chartData, selectedPeriod = selectedPeriod, subLabel = chartSubLabel)
+                    }
                 }
             }
 
             // Transaction list
             if (transactions.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "No transactions yet",
-                        fontFamily = Poppins,
-                        color = TextSecondary
-                    )
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No transactions yet",
+                            fontFamily = Poppins,
+                            color = TextSecondary
+                        )
+                    }
                 }
             } else {
-                LazyColumn(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(vertical = 8.dp)
-                ) {
-                    val grouped = transactions.groupBy { formatDate(it.date) }
-                    grouped.forEach { (date, txList) ->
-                        item {
-                            Text(
-                                text = date,
-                                fontFamily = Poppins,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 14.sp,
-                                color = TextSecondary,
-                                modifier = Modifier.padding(vertical = 4.dp)
-                            )
-                        }
-                        items(txList) { transaction ->
+                val grouped = transactions.groupBy { formatDate(it.date) }
+                grouped.forEach { (date, txList) ->
+                    item {
+                        Text(
+                            text = date,
+                            fontFamily = Poppins,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp,
+                            color = TextSecondary,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                        )
+                    }
+                    items(txList) { transaction ->
+                        Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                             TransactionItem(
                                 transaction = transaction,
                                 onClick = { onNavigateToDetail(transaction.id) }
