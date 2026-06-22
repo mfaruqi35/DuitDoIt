@@ -13,6 +13,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
 import java.util.Locale
 import javax.inject.Inject
@@ -26,31 +30,91 @@ class TransactionViewModel @Inject constructor(
     private val categoryRepository: CategoryRepository
 ) : ViewModel() {
 
-    private val _transactions = MutableStateFlow<List<TransactionEntity>>(emptyList())
-    val transactions: StateFlow<List<TransactionEntity>> = _transactions.asStateFlow()
-
-    private val _chartData = MutableStateFlow<List<ChartData>>(emptyList())
-    val chartData: StateFlow<List<ChartData>> = _chartData.asStateFlow()
-
-    private val _chartSubLabel = MutableStateFlow("")
-    val chartSubLabel: StateFlow<String> = _chartSubLabel.asStateFlow()
-
-    private val _selectedTransaction = MutableStateFlow<TransactionEntity?>(null)
-    val selectedTransaction: StateFlow<TransactionEntity?> = _selectedTransaction.asStateFlow()
-    private val _totalIncome = MutableStateFlow(0.0)
-    val totalIncome: StateFlow<Double> = _totalIncome.asStateFlow()
-
-    private val _totalExpense = MutableStateFlow(0.0)
-    val totalExpense: StateFlow<Double> = _totalExpense.asStateFlow()
-
     private val _selectedPeriod = MutableStateFlow("monthly")
     val selectedPeriod: StateFlow<String> = _selectedPeriod.asStateFlow()
+
+    private val _periodOffset = MutableStateFlow(0)
+    val periodOffset: StateFlow<Int> = _periodOffset.asStateFlow()
 
     private val _accounts = MutableStateFlow<List<AccountEntity>>(emptyList())
     val accounts: StateFlow<List<AccountEntity>> = _accounts.asStateFlow()
 
     private val _categories = MutableStateFlow<List<CategoryEntity>>(emptyList())
     val categories: StateFlow<List<CategoryEntity>> = _categories.asStateFlow()
+
+    private val _selectedTransaction = MutableStateFlow<TransactionEntity?>(null)
+    val selectedTransaction: StateFlow<TransactionEntity?> = _selectedTransaction.asStateFlow()
+
+    private val _rawTransactions = MutableStateFlow<List<TransactionEntity>>(emptyList())
+
+    private val _selectedType = MutableStateFlow("All")
+    val selectedType: StateFlow<String> = _selectedType.asStateFlow()
+
+    private val _selectedAccountId = MutableStateFlow<Long?>(null)
+    val selectedAccountId: StateFlow<Long?> = _selectedAccountId.asStateFlow()
+
+    private val _selectedCategoryNames = MutableStateFlow<Set<String>>(emptySet())
+    val selectedCategoryNames: StateFlow<Set<String>> = _selectedCategoryNames.asStateFlow()
+
+    val transactions: StateFlow<List<TransactionEntity>> = combine(
+        _rawTransactions,
+        _selectedType,
+        _selectedAccountId,
+        _selectedCategoryNames,
+        _categories
+    ) { rawList, type, accountId, categoryNames, categoriesList ->
+        val categoryMap = categoriesList.associateBy { it.id }
+        rawList.filter { tx ->
+            val matchesType = type == "All" || tx.type.lowercase() == type.lowercase()
+            val matchesAccount = accountId == null || tx.accountId == accountId
+            val txCategoryName = categoryMap[tx.categoryId]?.name ?: "Other"
+            val matchesCategory = categoryNames.isEmpty() || categoryNames.contains(txCategoryName)
+            matchesType && matchesAccount && matchesCategory
+        }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    val totalIncome: StateFlow<Double> = transactions.map { list ->
+        list.filter { it.type == "income" }.sumOf { it.amount }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, 0.0)
+
+    val totalExpense: StateFlow<Double> = transactions.map { list ->
+        list.filter { it.type == "expense" }.sumOf { it.amount }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, 0.0)
+
+    val chartData: StateFlow<List<ChartData>> = combine(
+        transactions,
+        _selectedPeriod,
+        _periodOffset
+    ) { list, period, offset ->
+        computeChartData(list, period, offset)
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    val chartSubLabel: StateFlow<String> = combine(
+        _selectedPeriod,
+        _periodOffset
+    ) { period, offset ->
+        val localeId = Locale("id", "ID")
+        val referenceTime = getPeriodDateRange(period, offset).second
+        when (period) {
+            "daily" -> SimpleDateFormat("MMMM yyyy", localeId).format(Date(referenceTime))
+            "weekly", "monthly" -> SimpleDateFormat("yyyy", localeId).format(Date(referenceTime))
+            else -> ""
+        }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, "")
+
+    val categoryChips: StateFlow<List<CategoryEntity>> = combine(
+        _categories,
+        _selectedType
+    ) { categoriesList, type ->
+        val filtered = when (type.lowercase()) {
+            "income" -> categoriesList.filter { it.type == "income" }
+            "expense" -> categoriesList.filter { it.type == "expense" }
+            else -> categoriesList
+        }
+        filtered.distinctBy { it.name }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+
 
     data class ChartData(
         val label: String,
@@ -153,48 +217,172 @@ class TransactionViewModel @Inject constructor(
 
     fun selectPeriod(period: String) {
         _selectedPeriod.value = period
+        _periodOffset.value = 0
     }
 
-    private fun getDateRange(period: String): Pair<Long, Long> {
+    fun previousPeriod() {
+        _periodOffset.value -= 1
+    }
+
+    fun nextPeriod() {
+        _periodOffset.value += 1
+    }
+
+    fun resetPeriod() {
+        _periodOffset.value = 0
+    }
+
+    fun getPeriodDateRange(period: String, offset: Int = 0): Pair<Long, Long> {
         val calendar = java.util.Calendar.getInstance()
-        val startDate = when (period) {
+        return when (period) {
             "daily" -> {
-                calendar.add(java.util.Calendar.DAY_OF_YEAR, -4)
-                calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
-                calendar.set(java.util.Calendar.MINUTE, 0)
-                calendar.set(java.util.Calendar.SECOND, 0)
-                calendar.timeInMillis
+                val endCal = calendar.clone() as java.util.Calendar
+                endCal.add(java.util.Calendar.DAY_OF_YEAR, offset * 5)
+                endCal.set(java.util.Calendar.HOUR_OF_DAY, 23)
+                endCal.set(java.util.Calendar.MINUTE, 59)
+                endCal.set(java.util.Calendar.SECOND, 59)
+                endCal.set(java.util.Calendar.MILLISECOND, 999)
+                val end = endCal.timeInMillis
+
+                val startCal = calendar.clone() as java.util.Calendar
+                startCal.add(java.util.Calendar.DAY_OF_YEAR, offset * 5 - 4)
+                startCal.set(java.util.Calendar.HOUR_OF_DAY, 0)
+                startCal.set(java.util.Calendar.MINUTE, 0)
+                startCal.set(java.util.Calendar.SECOND, 0)
+                startCal.set(java.util.Calendar.MILLISECOND, 0)
+                val start = startCal.timeInMillis
+
+                Pair(start, end)
             }
             "weekly" -> {
-                calendar.add(java.util.Calendar.WEEK_OF_YEAR, -4)
-                calendar.set(java.util.Calendar.DAY_OF_WEEK, calendar.firstDayOfWeek)
-                calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
-                calendar.set(java.util.Calendar.MINUTE, 0)
-                calendar.set(java.util.Calendar.SECOND, 0)
-                calendar.timeInMillis
+                val endCal = calendar.clone() as java.util.Calendar
+                endCal.add(java.util.Calendar.WEEK_OF_YEAR, offset * 5)
+                endCal.set(java.util.Calendar.DAY_OF_WEEK, endCal.firstDayOfWeek)
+                endCal.add(java.util.Calendar.DAY_OF_WEEK, 6)
+                endCal.set(java.util.Calendar.HOUR_OF_DAY, 23)
+                endCal.set(java.util.Calendar.MINUTE, 59)
+                endCal.set(java.util.Calendar.SECOND, 59)
+                endCal.set(java.util.Calendar.MILLISECOND, 999)
+                val end = endCal.timeInMillis
+
+                val startCal = calendar.clone() as java.util.Calendar
+                startCal.add(java.util.Calendar.WEEK_OF_YEAR, offset * 5 - 4)
+                startCal.set(java.util.Calendar.DAY_OF_WEEK, startCal.firstDayOfWeek)
+                startCal.set(java.util.Calendar.HOUR_OF_DAY, 0)
+                startCal.set(java.util.Calendar.MINUTE, 0)
+                startCal.set(java.util.Calendar.SECOND, 0)
+                startCal.set(java.util.Calendar.MILLISECOND, 0)
+                val start = startCal.timeInMillis
+
+                Pair(start, end)
             }
             "monthly" -> {
-                calendar.add(java.util.Calendar.MONTH, -4)
-                calendar.set(java.util.Calendar.DAY_OF_MONTH, 1)
-                calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
-                calendar.set(java.util.Calendar.MINUTE, 0)
-                calendar.set(java.util.Calendar.SECOND, 0)
-                calendar.timeInMillis
+                val endCal = calendar.clone() as java.util.Calendar
+                endCal.add(java.util.Calendar.MONTH, offset * 5)
+                endCal.set(java.util.Calendar.DAY_OF_MONTH, endCal.getActualMaximum(java.util.Calendar.DAY_OF_MONTH))
+                endCal.set(java.util.Calendar.HOUR_OF_DAY, 23)
+                endCal.set(java.util.Calendar.MINUTE, 59)
+                endCal.set(java.util.Calendar.SECOND, 59)
+                endCal.set(java.util.Calendar.MILLISECOND, 999)
+                val end = endCal.timeInMillis
+
+                val startCal = calendar.clone() as java.util.Calendar
+                startCal.add(java.util.Calendar.MONTH, offset * 5 - 4)
+                startCal.set(java.util.Calendar.DAY_OF_MONTH, 1)
+                startCal.set(java.util.Calendar.HOUR_OF_DAY, 0)
+                startCal.set(java.util.Calendar.MINUTE, 0)
+                startCal.set(java.util.Calendar.SECOND, 0)
+                startCal.set(java.util.Calendar.MILLISECOND, 0)
+                val start = startCal.timeInMillis
+
+                Pair(start, end)
             }
             "yearly" -> {
-                calendar.add(java.util.Calendar.YEAR, -4)
-                calendar.set(java.util.Calendar.DAY_OF_YEAR, 1)
-                calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
-                calendar.set(java.util.Calendar.MINUTE, 0)
-                calendar.set(java.util.Calendar.SECOND, 0)
-                calendar.timeInMillis
+                val endCal = calendar.clone() as java.util.Calendar
+                endCal.add(java.util.Calendar.YEAR, offset * 5)
+                endCal.set(java.util.Calendar.DAY_OF_YEAR, endCal.getActualMaximum(java.util.Calendar.DAY_OF_YEAR))
+                endCal.set(java.util.Calendar.HOUR_OF_DAY, 23)
+                endCal.set(java.util.Calendar.MINUTE, 59)
+                endCal.set(java.util.Calendar.SECOND, 59)
+                endCal.set(java.util.Calendar.MILLISECOND, 999)
+                val end = endCal.timeInMillis
+
+                val startCal = calendar.clone() as java.util.Calendar
+                startCal.add(java.util.Calendar.YEAR, offset * 5 - 4)
+                startCal.set(java.util.Calendar.DAY_OF_YEAR, 1)
+                startCal.set(java.util.Calendar.HOUR_OF_DAY, 0)
+                startCal.set(java.util.Calendar.MINUTE, 0)
+                startCal.set(java.util.Calendar.SECOND, 0)
+                startCal.set(java.util.Calendar.MILLISECOND, 0)
+                val start = startCal.timeInMillis
+
+                Pair(start, end)
             }
-            else -> 0L
+            else -> Pair(0L, Long.MAX_VALUE)
         }
-        return Pair(startDate, Long.MAX_VALUE)
     }
 
-    private fun updateChartData(list: List<TransactionEntity>, period: String) {
+    fun getPeriodLabel(period: String, offset: Int): String {
+        val (start, end) = getPeriodDateRange(period, offset)
+        val localeId = Locale("id", "ID")
+        return when (period) {
+            "daily" -> {
+                val sdfStart = SimpleDateFormat("dd MMM yyyy", localeId)
+                val sdfEnd = SimpleDateFormat("dd MMM yyyy", localeId)
+                "${sdfStart.format(Date(start))} - ${sdfEnd.format(Date(end))}"
+            }
+            "weekly" -> {
+                val sdfStart = SimpleDateFormat("dd MMM", localeId)
+                val sdfEnd = SimpleDateFormat("dd MMM yyyy", localeId)
+                "${sdfStart.format(Date(start))} - ${sdfEnd.format(Date(end))}"
+            }
+            "monthly" -> {
+                val sdfStart = SimpleDateFormat("MMM", localeId)
+                val sdfEnd = SimpleDateFormat("MMMM yyyy", localeId)
+                "${sdfStart.format(Date(start))} - ${sdfEnd.format(Date(end))}"
+            }
+            "yearly" -> {
+                val sdfStart = SimpleDateFormat("yyyy", localeId)
+                val sdfEnd = SimpleDateFormat("yyyy", localeId)
+                "${sdfStart.format(Date(start))} - ${sdfEnd.format(Date(end))}"
+            }
+            else -> ""
+        }
+    }
+
+    fun setFilterType(type: String) {
+        _selectedType.value = type
+        // Reset category filters that are no longer valid for the selected type
+        val currentCategories = _selectedCategoryNames.value
+        if (currentCategories.isNotEmpty()) {
+            val validCategories = _categories.value
+                .filter { type == "All" || it.type.lowercase() == type.lowercase() }
+                .map { it.name }
+                .toSet()
+            val newCategories = currentCategories.intersect(validCategories)
+            _selectedCategoryNames.value = newCategories
+        }
+    }
+
+    fun setFilterAccount(accountId: Long?) {
+        _selectedAccountId.value = accountId
+    }
+
+    fun toggleCategoryFilter(categoryName: String) {
+        val current = _selectedCategoryNames.value.toMutableSet()
+        if (current.contains(categoryName)) {
+            current.remove(categoryName)
+        } else {
+            current.add(categoryName)
+        }
+        _selectedCategoryNames.value = current
+    }
+
+    fun clearCategoryFilters() {
+        _selectedCategoryNames.value = emptySet()
+    }
+
+    private fun computeChartData(list: List<TransactionEntity>, period: String, offset: Int): List<ChartData> {
         val localeId = Locale("id", "ID")
         val template = mutableListOf<String>()
 
@@ -203,7 +391,7 @@ class TransactionViewModel @Inject constructor(
                 val sdf = SimpleDateFormat("dd", localeId)
                 for (i in 4 downTo 0) {
                     val cal = java.util.Calendar.getInstance()
-                    cal.add(java.util.Calendar.DAY_OF_YEAR, -i)
+                    cal.add(java.util.Calendar.DAY_OF_YEAR, offset * 5 - i)
                     template.add(sdf.format(cal.time))
                 }
             }
@@ -211,7 +399,7 @@ class TransactionViewModel @Inject constructor(
                 val sdf = SimpleDateFormat("dd/M", localeId)
                 for (i in 4 downTo 0) {
                     val cal = java.util.Calendar.getInstance()
-                    cal.add(java.util.Calendar.WEEK_OF_YEAR, -i)
+                    cal.add(java.util.Calendar.WEEK_OF_YEAR, offset * 5 - i)
                     cal.set(java.util.Calendar.DAY_OF_WEEK, cal.firstDayOfWeek)
                     template.add(sdf.format(cal.time))
                 }
@@ -220,7 +408,7 @@ class TransactionViewModel @Inject constructor(
                 val sdf = SimpleDateFormat("MMM", localeId)
                 for (i in 4 downTo 0) {
                     val cal = java.util.Calendar.getInstance()
-                    cal.add(java.util.Calendar.MONTH, -i)
+                    cal.add(java.util.Calendar.MONTH, offset * 5 - i)
                     template.add(sdf.format(cal.time))
                 }
             }
@@ -228,13 +416,13 @@ class TransactionViewModel @Inject constructor(
                 val sdf = SimpleDateFormat("yyyy", localeId)
                 for (i in 4 downTo 0) {
                     val cal = java.util.Calendar.getInstance()
-                    cal.add(java.util.Calendar.YEAR, -i)
+                    cal.add(java.util.Calendar.YEAR, offset * 5 - i)
                     template.add(sdf.format(cal.time))
                 }
             }
         }
 
-        _chartData.value = template.map { label ->
+        return template.map { label ->
             val matchingTxs = list.filter { tx ->
                 val txLabel = when (period) {
                     "daily" -> SimpleDateFormat("dd", localeId).format(Date(tx.date))
@@ -257,26 +445,18 @@ class TransactionViewModel @Inject constructor(
                 expense = matchingTxs.filter { it.type == "expense" }.sumOf { it.amount }
             )
         }
-
-        val currentTime = System.currentTimeMillis()
-        _chartSubLabel.value = when (period) {
-            "daily" -> SimpleDateFormat("MMMM yyyy", localeId).format(Date(currentTime))
-            "weekly", "monthly" -> SimpleDateFormat("yyyy", localeId).format(Date(currentTime))
-            else -> ""
-        }
     }
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     private fun observeTransactions() {
         viewModelScope.launch {
-            _selectedPeriod.flatMapLatest { period ->
-                val (start, end) = getDateRange(period)
+            combine(_selectedPeriod, _periodOffset) { period, offset ->
+                Pair(period, offset)
+            }.flatMapLatest { (period, offset) ->
+                val (start, end) = getPeriodDateRange(period, offset)
                 transactionRepository.getTransactionsByPeriod(start, end)
             }.collect { list ->
-                _transactions.value = list
-                _totalIncome.value = list.filter { it.type == "income" }.sumOf { it.amount }
-                _totalExpense.value = list.filter { it.type == "expense" }.sumOf { it.amount }
-                updateChartData(list, _selectedPeriod.value)
+                _rawTransactions.value = list
             }
         }
     }
