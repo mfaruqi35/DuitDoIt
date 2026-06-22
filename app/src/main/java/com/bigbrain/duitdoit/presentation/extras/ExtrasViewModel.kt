@@ -48,6 +48,7 @@ class ExtrasViewModel @Inject constructor(
 
     private val _selectedWishlist = MutableStateFlow<WishlistEntity?>(null)
     val selectedWishlist: StateFlow<WishlistEntity?> = _selectedWishlist.asStateFlow()
+
     private fun loadWishlist() {
         viewModelScope.launch {
             wishlistRepository.getAllWishlistItems().collect {
@@ -56,14 +57,20 @@ class ExtrasViewModel @Inject constructor(
             }
         }
     }
-
     fun loadWishlistById(id: Long){
         viewModelScope.launch {
             _selectedWishlist.value = wishlistRepository.getWishlistById(id)
         }
     }
 
+    private val _selectedRegularPayment = MutableStateFlow<RegularPaymentEntity?>(null)
+    val selectedRegularPayment: StateFlow<RegularPaymentEntity?> = _selectedRegularPayment.asStateFlow()
 
+    fun loadRegularPaymentById(id: Long) {
+        viewModelScope.launch {
+            _selectedRegularPayment.value = regularPaymentRepository.getRegularPaymentById(id)
+        }
+    }
 
     private fun loadRegularPayments() {
         viewModelScope.launch {
@@ -156,6 +163,46 @@ class ExtrasViewModel @Inject constructor(
     fun deleteRegularPayment(payment: RegularPaymentEntity) {
         viewModelScope.launch {
             regularPaymentRepository.deleteRegularPayment(payment)
+        }
+    }
+
+    fun updateRegularPayment(
+        id: Long,
+        name: String,
+        amount: Double,
+        billingCycle: String,
+        nextRenewalDate: Long,
+        categoryId: Long,
+        accountId: Long?,
+        icon: String,
+        onSuccess: () -> Unit
+    ) {
+        viewModelScope.launch {
+            val currentPayment = regularPaymentRepository.getRegularPaymentById(id)
+            if (currentPayment != null) {
+                regularPaymentRepository.updateRegularPayment(
+                    currentPayment.copy(
+                        name = name,
+                        amount = amount,
+                        billingCycle = billingCycle,
+                        nextRenewalDate = nextRenewalDate,
+                        categoryId = categoryId,
+                        accountId = accountId,
+                        icon = icon
+                    )
+                )
+                onSuccess()
+            }
+        }
+    }
+
+    fun deleteRegularPaymentById(id: Long, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            val currentPayment = regularPaymentRepository.getRegularPaymentById(id)
+            if (currentPayment != null) {
+                regularPaymentRepository.deleteRegularPayment(currentPayment)
+                onSuccess()
+            }
         }
     }
 }

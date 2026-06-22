@@ -12,6 +12,7 @@ class RegularPaymentRepository @Inject constructor(
 ) {
     fun getAllActiveRegularPayments(): Flow<List<RegularPaymentEntity>> = regularPaymentDao.getAllActiveRegularPayments()
     fun getTotalMonthlyPayments(): Flow<Double?> = regularPaymentDao.getTotalMonthlyPayments()
+    suspend fun getRegularPaymentById(id: Long): RegularPaymentEntity? = regularPaymentDao.getRegularPaymentById(id)
     suspend fun insertRegularPayment(payment: RegularPaymentEntity): Long = regularPaymentDao.insertRegularPayment(payment)
     suspend fun updateRegularPayment(payment: RegularPaymentEntity) = regularPaymentDao.updateRegularPayment(payment)
     suspend fun deleteRegularPayment(payment: RegularPaymentEntity) = regularPaymentDao.deleteRegularPayment(payment)

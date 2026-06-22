@@ -12,6 +12,9 @@ interface RegularPaymentDao {
     @Query("SELECT SUM(amount) FROM regular_payments WHERE isActive = 1 AND billingCycle = 'monthly'")
     fun getTotalMonthlyPayments(): Flow<Double?>
 
+    @Query("SELECT * FROM regular_payments WHERE id = :id")
+    suspend fun getRegularPaymentById(id: Long): RegularPaymentEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertRegularPayment(payment: RegularPaymentEntity): Long
 

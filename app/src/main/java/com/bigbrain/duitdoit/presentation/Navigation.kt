@@ -19,6 +19,7 @@ import com.bigbrain.duitdoit.presentation.extras.ExtrasScreen
 import com.bigbrain.duitdoit.presentation.extras.RegularPaymentListScreen
 import com.bigbrain.duitdoit.presentation.extras.WishlistListScreen
 import com.bigbrain.duitdoit.presentation.extras.EditWishlistScreen
+import com.bigbrain.duitdoit.presentation.extras.EditRegularPaymentScreen
 import com.bigbrain.duitdoit.presentation.analytics.TransactionDetailScreen
 import com.bigbrain.duitdoit.presentation.dashboard.CategoryDetailScreen
 import com.bigbrain.duitdoit.presentation.accounts.TransferHistoryScreen
@@ -50,6 +51,9 @@ sealed class Screen(val route: String){
     }
     object RegularPaymentList : Screen("regular_payment_list")
     object AddRegularPayment : Screen("add_regular_payment")
+    object EditRegularPayment : Screen("edit_regular_payment/{regularPaymentId}") {
+        fun createRoute(regularPaymentId: Long) = "edit_regular_payment/$regularPaymentId"
+    }
 }
 
 @Composable
@@ -162,13 +166,25 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
         composable(Screen.RegularPaymentList.route) {
             RegularPaymentListScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToAddRegularPayment = { navController.navigate(Screen.AddRegularPayment.route) }
+                onNavigateToAddRegularPayment = { navController.navigate(Screen.AddRegularPayment.route) },
+                onNavigateToEditRegularPayment = { id ->
+                    navController.navigate(Screen.EditRegularPayment.createRoute(id))
+                }
             )
         }
         composable(Screen.AddRegularPayment.route) {
             AddRegularPaymentScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
+        }
+        composable(Screen.EditRegularPayment.route) { backStackEntry ->
+            val regularPaymentId = backStackEntry.arguments?.getString("regularPaymentId")?.toLongOrNull()
+            regularPaymentId?.let {
+                EditRegularPaymentScreen(
+                    regularPaymentId = it,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
         }
         composable(Screen.AddAccount.route) {
             AddAccountScreen(

@@ -1,6 +1,7 @@
 package com.bigbrain.duitdoit.presentation.extras
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -30,6 +31,7 @@ import java.util.*
 fun RegularPaymentListScreen(
     onNavigateBack: () -> Unit,
     onNavigateToAddRegularPayment: () -> Unit,
+    onNavigateToEditRegularPayment: (Long) -> Unit,
     viewModel: ExtrasViewModel = hiltViewModel()
 ) {
     val regularPayments by viewModel.regularPayments.collectAsState()
@@ -115,7 +117,7 @@ fun RegularPaymentListScreen(
                     items(regularPayments) { payment ->
                         RegularPaymentListItem(
                             payment = payment,
-                            onDelete = { viewModel.deleteRegularPayment(payment) }
+                            onEdit = { onNavigateToEditRegularPayment(payment.id) }
                         )
                     }
                 }
@@ -159,7 +161,7 @@ fun RegularPaymentListScreen(
 @Composable
 fun RegularPaymentListItem(
     payment: RegularPaymentEntity,
-    onDelete: () -> Unit
+    onEdit: () -> Unit
 ) {
     val sdf = SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH)
     val iconColors = mapOf(
@@ -175,7 +177,11 @@ fun RegularPaymentListItem(
     val iconRes = getRegularPaymentIconRes(payment.icon)
 
     Card(
-        modifier = Modifier.fillMaxWidth().semantics{ contentDescription = "regular_payment_item_${payment.name}" }.testTag("regular_payment_item_${payment.name}"),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onEdit() }
+            .semantics{ contentDescription = "regular_payment_item_${payment.name}" }
+            .testTag("regular_payment_item_${payment.name}"),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
@@ -217,16 +223,6 @@ fun RegularPaymentListItem(
                     fontFamily = Poppins,
                     fontSize = 12.sp,
                     color = TextSecondary
-                )
-            }
-            IconButton(
-                onClick = onDelete,
-                modifier = Modifier.semantics{ contentDescription = "btn_delete_regular_payment_${payment.name}"}.testTag("btn_delete_regular_payment_${payment.name}")
-            ) {
-                Icon(
-                    painter = painterResource(id = com.bigbrain.duitdoit.R.drawable.ic_delete),
-                    contentDescription = "Delete",
-                    tint = Expense
                 )
             }
         }
