@@ -48,6 +48,15 @@ class AccountsViewModel @Inject constructor(
         }
     }
 
+    private val _selectedAccount = MutableStateFlow<AccountEntity?>(null)
+    val selectedAccount: StateFlow<AccountEntity?> = _selectedAccount.asStateFlow()
+
+    fun loadAccountById(id: Long) {
+        viewModelScope.launch {
+            _selectedAccount.value = accountRepository.getAccountById(id)
+        }
+    }
+
     fun addAccount(name: String, icon: String, balance: Double) {
         viewModelScope.launch {
             accountRepository.insertAccount(
@@ -59,9 +68,30 @@ class AccountsViewModel @Inject constructor(
             )
         }
     }
+
+    fun updateAccount(id: Long, name: String, icon: String, balance: Double, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            val currentAccount = accountRepository.getAccountById(id)
+            if (currentAccount != null) {
+                accountRepository.updateAccount(currentAccount.copy(name = name, icon = icon, balance = balance))
+                onSuccess()
+            }
+        }
+    }
+
     fun deleteAccount(account: AccountEntity) {
         viewModelScope.launch {
             accountRepository.deleteAccount(account)
+        }
+    }
+
+    fun deleteAccountById(id: Long, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            val currentAccount = accountRepository.getAccountById(id)
+            if (currentAccount != null) {
+                accountRepository.deleteAccount(currentAccount)
+                onSuccess()
+            }
         }
     }
     fun transfer(

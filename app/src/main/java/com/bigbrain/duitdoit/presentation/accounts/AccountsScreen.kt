@@ -1,6 +1,7 @@
 package com.bigbrain.duitdoit.presentation.accounts
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -33,6 +34,7 @@ fun AccountsScreen(
     onNavigateToAddAccount: () -> Unit,
     onNavigateToTransfer: () -> Unit,
     onNavigateToTransferHistory: () -> Unit,
+    onNavigateToEditAccount: (Long) -> Unit,
     viewModel: AccountsViewModel = hiltViewModel()
 ) {
     val accounts by viewModel.accounts.collectAsState()
@@ -90,7 +92,7 @@ fun AccountsScreen(
                 items(accounts) { account ->
                     AccountItem(
                         account = account,
-                        onDelete = { viewModel.deleteAccount(account) }
+                        onClick = { onNavigateToEditAccount(account.id) }
                     )
                 }
             }
@@ -101,10 +103,8 @@ fun AccountsScreen(
 @Composable
 fun AccountItem(
     account: AccountEntity,
-    onDelete: () -> Unit
+    onClick: () -> Unit
 ) {
-    var showDeleteDialog by remember { mutableStateOf(false) }
-
     val iconRes = when (account.icon) {
         "ic_wallet" -> R.drawable.ic_wallet
         "ic_bank" -> R.drawable.ic_credit
@@ -121,37 +121,10 @@ fun AccountItem(
         else -> AccountOther
     }
 
-    if (showDeleteDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
-            modifier = Modifier.semantics { testTagsAsResourceId = true },
-            title = { Text("Delete Account", fontFamily = Poppins) },
-            text = { Text("Are you sure you want to delete ${account.name}?", fontFamily = Poppins) },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        onDelete()
-                        showDeleteDialog = false
-                    },
-                    modifier = Modifier
-                        .testTag("btn_confirm_delete_account")
-                        .semantics { contentDescription = "btn_confirm_delete_account" },
-                    colors = ButtonDefaults.buttonColors(containerColor = Expense)
-                ) {
-                    Text("Delete", fontFamily = Poppins)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel", fontFamily = Poppins)
-                }
-            }
-        )
-    }
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onClick() }
             .testTag("account_item_${account.name}")
             .semantics { contentDescription = "account_item_${account.name}" },
         shape = RoundedCornerShape(16.dp),
@@ -197,18 +170,6 @@ fun AccountItem(
                     fontSize = 16.sp,
                     color = Primary
                 )
-                IconButton(
-                    onClick = { showDeleteDialog = true },
-                    modifier = Modifier
-                        .testTag("btn_delete_account_${account.name}")
-                        .semantics { contentDescription = "btn_delete_account_${account.name}" }
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_delete),
-                        contentDescription = "Delete Account",
-                        tint = Expense
-                    )
-                }
             }
         }
     }

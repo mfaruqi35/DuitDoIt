@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.compose.ui.Modifier
 import com.bigbrain.duitdoit.presentation.accounts.AccountsScreen
 import com.bigbrain.duitdoit.presentation.accounts.AddAccountScreen
+import com.bigbrain.duitdoit.presentation.accounts.EditAccountScreen
 import com.bigbrain.duitdoit.presentation.accounts.TransferScreen
 import com.bigbrain.duitdoit.presentation.analytics.AddTransactionScreen
 import com.bigbrain.duitdoit.presentation.analytics.TransactionScreen
@@ -38,6 +39,9 @@ sealed class Screen(val route: String){
         fun createRoute(transactionId: String) = "transaction_detail/$transactionId"
     }
     object AddAccount : Screen("add_account")
+    object EditAccount : Screen("edit_account/{accountId}") {
+        fun createRoute(accountId: Long) = "edit_account/$accountId"
+    }
     object WishlistList : Screen("wishlist_list")
     object AddWishlist : Screen("add_wishlist")
     object RegularPaymentList : Screen("regular_payment_list")
@@ -110,7 +114,10 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
             AccountsScreen(
                 onNavigateToAddAccount = { navController.navigate(Screen.AddAccount.route) },
                 onNavigateToTransfer = { navController.navigate(Screen.Transfer.route) },
-                onNavigateToTransferHistory =  {navController.navigate(Screen.TransferHistory.route)}
+                onNavigateToTransferHistory =  {navController.navigate(Screen.TransferHistory.route)},
+                onNavigateToEditAccount = { id ->
+                    navController.navigate(Screen.EditAccount.createRoute(id))
+                }
             )
         }
 
@@ -151,6 +158,15 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
             AddAccountScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
+        }
+        composable(Screen.EditAccount.route) { backStackEntry ->
+            val accountId = backStackEntry.arguments?.getString("accountId")?.toLongOrNull()
+            accountId?.let {
+                EditAccountScreen(
+                    accountId = it,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
         }
         composable(Screen.Transfer.route) {
             TransferScreen(
