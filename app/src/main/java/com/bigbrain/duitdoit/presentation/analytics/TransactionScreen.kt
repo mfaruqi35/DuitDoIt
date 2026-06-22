@@ -66,7 +66,7 @@ fun TransactionScreen(
 
     val selectedType by viewModel.selectedType.collectAsState()
     val selectedAccountId by viewModel.selectedAccountId.collectAsState()
-    val selectedCategoryName by viewModel.selectedCategoryName.collectAsState()
+    val selectedCategoryNames by viewModel.selectedCategoryNames.collectAsState()
     val accounts by viewModel.accounts.collectAsState()
     val categoryChips by viewModel.categoryChips.collectAsState()
 
@@ -411,14 +411,14 @@ fun TransactionScreen(
                         ) {
                             FilterChipItem(
                                 label = "All",
-                                isSelected = selectedCategoryName == null,
-                                onClick = { viewModel.setFilterCategory(null) }
+                                isSelected = selectedCategoryNames.isEmpty(),
+                                onClick = { viewModel.clearCategoryFilters() }
                             )
                             categoryChips.forEach { category ->
                                 FilterChipItem(
                                     label = category.name,
-                                    isSelected = selectedCategoryName?.lowercase() == category.name.lowercase(),
-                                    onClick = { viewModel.setFilterCategory(category.name) },
+                                    isSelected = selectedCategoryNames.contains(category.name),
+                                    onClick = { viewModel.toggleCategoryFilter(category.name) },
                                     colorHex = category.color
                                 )
                             }

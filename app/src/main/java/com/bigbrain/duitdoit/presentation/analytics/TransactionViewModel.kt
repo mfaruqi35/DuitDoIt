@@ -53,22 +53,22 @@ class TransactionViewModel @Inject constructor(
     private val _selectedAccountId = MutableStateFlow<Long?>(null)
     val selectedAccountId: StateFlow<Long?> = _selectedAccountId.asStateFlow()
 
-    private val _selectedCategoryName = MutableStateFlow<String?>(null)
-    val selectedCategoryName: StateFlow<String?> = _selectedCategoryName.asStateFlow()
+    private val _selectedCategoryNames = MutableStateFlow<Set<String>>(emptySet())
+    val selectedCategoryNames: StateFlow<Set<String>> = _selectedCategoryNames.asStateFlow()
 
     val transactions: StateFlow<List<TransactionEntity>> = combine(
         _rawTransactions,
         _selectedType,
         _selectedAccountId,
-        _selectedCategoryName,
+        _selectedCategoryNames,
         _categories
-    ) { rawList, type, accountId, categoryName, categoriesList ->
+    ) { rawList, type, accountId, categoryNames, categoriesList ->
         val categoryMap = categoriesList.associateBy { it.id }
         rawList.filter { tx ->
             val matchesType = type == "All" || tx.type.lowercase() == type.lowercase()
             val matchesAccount = accountId == null || tx.accountId == accountId
             val txCategoryName = categoryMap[tx.categoryId]?.name ?: "Other"
-            val matchesCategory = categoryName == null || txCategoryName.lowercase() == categoryName.lowercase()
+            val matchesCategory = categoryNames.isEmpty() || categoryNames.contains(txCategoryName)
             matchesType && matchesAccount && matchesCategory
         }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
@@ -352,13 +352,15 @@ class TransactionViewModel @Inject constructor(
 
     fun setFilterType(type: String) {
         _selectedType.value = type
-        // Reset category filter if it's no longer valid for the selected type
-        val currentCategory = _selectedCategoryName.value
-        if (currentCategory != null) {
-            val isValid = _categories.value.any { it.name == currentCategory && (type == "All" || it.type.lowercase() == type.lowercase()) }
-            if (!isValid) {
-                _selectedCategoryName.value = null
-            }
+        // Reset category filters that are no longer valid for the selected type
+        val currentCategories = _selectedCategoryNames.value
+        if (currentCategories.isNotEmpty()) {
+            val validCategories = _categories.value
+                .filter { type == "All" || it.type.lowercase() == type.lowercase() }
+                .map { it.name }
+                .toSet()
+            val newCategories = currentCategories.intersect(validCategories)
+            _selectedCategoryNames.value = newCategories
         }
     }
 
@@ -366,8 +368,18 @@ class TransactionViewModel @Inject constructor(
         _selectedAccountId.value = accountId
     }
 
-    fun setFilterCategory(categoryName: String?) {
-        _selectedCategoryName.value = categoryName
+    fun toggleCategoryFilter(categoryName: String) {
+        val current = _selectedCategoryNames.value.toMutableSet()
+        if (current.contains(categoryName)) {
+            current.remove(categoryName)
+        } else {
+            current.add(categoryName)
+        }
+        _selectedCategoryNames.value = current
+    }
+
+    fun clearCategoryFilters() {
+        _selectedCategoryNames.value = emptySet()
     }
 
     private fun computeChartData(list: List<TransactionEntity>, period: String, offset: Int): List<ChartData> {
