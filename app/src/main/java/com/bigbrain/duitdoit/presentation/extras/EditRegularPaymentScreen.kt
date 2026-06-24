@@ -24,6 +24,11 @@ import com.bigbrain.duitdoit.R
 import com.bigbrain.duitdoit.presentation.components.AppHeader
 import com.bigbrain.duitdoit.ui.theme.*
 import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
+import java.text.SimpleDateFormat
+import androidx.compose.material3.SelectableDates
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,6 +49,8 @@ fun EditRegularPaymentScreen(
     var nextRenewalDate by remember { mutableStateOf(System.currentTimeMillis()) }
     var initialized by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    val sdf = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
 
     val selectedAccount = accounts.find { it.id == selectedAccountId }
 
@@ -202,6 +209,69 @@ fun EditRegularPaymentScreen(
                 }
             }
 
+            Text("Next Renewal Date", fontFamily = Poppins, color = TextSecondary)
+            OutlinedTextField(
+                value = sdf.format(Date(nextRenewalDate)),
+                onValueChange = {},
+                readOnly = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showDatePicker = true }
+                    .semantics { contentDescription = "field_next_renewal_date" }
+                    .testTag("field_next_renewal_date"),
+                shape = RoundedCornerShape(12.dp),
+                trailingIcon = {
+                    IconButton(onClick = { showDatePicker = true }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_calendar),
+                            contentDescription = "Pick Date",
+                            tint = Primary
+                        )
+                    }
+                }
+            )
+
+            if (showDatePicker) {
+                val todayStart = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }.timeInMillis
+
+                val datePickerState = rememberDatePickerState(
+                    initialSelectedDateMillis = nextRenewalDate,
+                    selectableDates = object : SelectableDates {
+                        override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                            return utcTimeMillis >= todayStart
+                        }
+                    }
+                )
+                DatePickerDialog(
+                    onDismissRequest = { showDatePicker = false },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                datePickerState.selectedDateMillis?.let {
+                                    nextRenewalDate = it
+                                }
+                                showDatePicker = false
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Primary)
+                        ) {
+                            Text("OK", fontFamily = Poppins)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDatePicker = false }) {
+                            Text("Cancel", fontFamily = Poppins)
+                        }
+                    }
+                ) {
+                    DatePicker(state = datePickerState)
+                }
+            }
+
             Text("Select Icon", fontFamily = Poppins, color = TextSecondary)
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -275,25 +345,12 @@ fun EditRegularPaymentScreen(
             Button(
                 onClick = {
                     if (name.isNotBlank() && amount.isNotBlank()) {
-                        val nextRenewal = if (selectedRegularPayment?.billingCycle != billingCycle) {
-                            if (billingCycle == "monthly") {
-                                val cal = Calendar.getInstance()
-                                cal.add(Calendar.MONTH, 1)
-                                cal.timeInMillis
-                            } else {
-                                val cal = Calendar.getInstance()
-                                cal.add(Calendar.YEAR, 1)
-                                cal.timeInMillis
-                            }
-                        } else {
-                            nextRenewalDate
-                        }
                         viewModel.updateRegularPayment(
                             id = regularPaymentId,
                             name = name,
                             amount = amount.toDoubleOrNull() ?: 0.0,
                             billingCycle = billingCycle,
-                            nextRenewalDate = nextRenewal,
+                            nextRenewalDate = nextRenewalDate,
                             categoryId = 1,
                             accountId = selectedAccountId,
                             icon = selectedIcon

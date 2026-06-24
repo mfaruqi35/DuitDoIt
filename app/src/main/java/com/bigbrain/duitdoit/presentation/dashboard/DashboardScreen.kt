@@ -34,6 +34,7 @@ import com.bigbrain.duitdoit.presentation.Screen
 fun DashboardScreen(
     onNavigateToCategoryDetail: (Long, String) -> Unit,
     onNavigateToRegularPaymentList: () -> Unit,
+    onNavigateToEditRegularPayment: (Long) -> Unit,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val accounts by viewModel.accounts.collectAsState()
@@ -156,7 +157,8 @@ fun DashboardScreen(
             regularPayments = regularPayments,
             onNavigateToRegularPaymentList = {
                 onNavigateToRegularPaymentList()
-            }
+            },
+            onNavigateToEditRegularPayment = { onNavigateToEditRegularPayment(it) }
         )
 
     }
@@ -178,6 +180,7 @@ fun ChartCard(
     onCategoryClick: (Long, String) -> Unit,
     regularPayments: List<com.bigbrain.duitdoit.data.local.entity.RegularPaymentEntity>,
     onNavigateToRegularPaymentList: () -> Unit,
+    onNavigateToEditRegularPayment: (Long) -> Unit,
 ) {
     val data = if (selectedTab == "expense") categoryExpenses else categoryIncomes
     val total = data.values.sum()
@@ -345,7 +348,7 @@ fun ChartCard(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(regularPayments.take(3)) { payment ->
-                    RegularPaymentCard(payment = payment)
+                    RegularPaymentCard(payment = payment, onClick = { onNavigateToEditRegularPayment(payment.id) })
                 }
             }
         }

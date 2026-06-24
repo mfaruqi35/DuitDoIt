@@ -213,7 +213,8 @@ fun WishlistListItem(
             .semantics{ contentDescription = "wishlist_item_${item.name}"}
             .testTag("wishlist_item_${item.name}"),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Border)
     ) {
         Row(
             modifier = Modifier

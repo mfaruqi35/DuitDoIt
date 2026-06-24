@@ -20,7 +20,9 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
 import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val accountRepository: AccountRepository,
@@ -89,8 +91,20 @@ class DashboardViewModel @Inject constructor(
     }
     private fun loadRegularPayments() {
         viewModelScope.launch {
-            regularPaymentRepository.getAllActiveRegularPayments().collect {
-                _regularPayments.value = it
+            combine(
+                regularPaymentRepository.getAllActiveRegularPayments(),
+                _selectedAccountId,
+                _selectedPeriod,
+                _periodOffset
+            ) { payments, accountId, period, offset ->
+                val (start, end) = getPeriodDateRange(period, offset)
+                payments.filter { payment ->
+                    val matchesAccount = accountId == null || payment.accountId == accountId
+                    val matchesPeriod = payment.nextRenewalDate in start..end
+                    matchesAccount && matchesPeriod
+                }
+            }.collect { filteredPayments ->
+                _regularPayments.value = filteredPayments
             }
         }
     }
