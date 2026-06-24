@@ -1,6 +1,7 @@
 package com.bigbrain.duitdoit.presentation.extras
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -183,7 +184,8 @@ fun RegularPaymentListItem(
             .semantics{ contentDescription = "regular_payment_item_${payment.name}" }
             .testTag("regular_payment_item_${payment.name}"),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Border)
     ) {
         Row(
             modifier = Modifier

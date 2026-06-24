@@ -23,6 +23,9 @@ import com.bigbrain.duitdoit.presentation.dashboard.formatCurrency
 import com.bigbrain.duitdoit.ui.theme.*
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
 
@@ -233,6 +236,13 @@ fun RegularPaymentCard(payment: RegularPaymentEntity) {
                 text = "/ ${payment.billingCycle}",
                 fontFamily = Poppins,
                 fontSize = 12.sp,
+                color = TextSecondary
+            )
+            val sdf = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
+            Text(
+                text = "Next: ${sdf.format(Date(payment.nextRenewalDate))}",
+                fontFamily = Poppins,
+                fontSize = 11.sp,
                 color = TextSecondary
             )
         }
