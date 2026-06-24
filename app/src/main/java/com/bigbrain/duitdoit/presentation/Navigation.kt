@@ -94,6 +94,9 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
                 },
                 onNavigateToRegularPaymentList = {
                     navController.navigate(Screen.RegularPaymentList.route)
+                },
+                onNavigateToEditRegularPayment = {id ->
+                    navController.navigate(Screen.EditRegularPayment.createRoute(id))
                 }
             )
         }
@@ -136,8 +139,16 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
         }
 
         composable(Screen.Extras.route) {
-            ExtrasScreen(onNavigateToWishlistList = { navController.navigate(Screen.WishlistList.route) },
-                onNavigateToRegularPaymentList = { navController.navigate(Screen.RegularPaymentList.route) })
+            ExtrasScreen(
+                onNavigateToWishlistList = { navController.navigate(Screen.WishlistList.route) },
+                onNavigateToRegularPaymentList = { navController.navigate(Screen.RegularPaymentList.route) },
+                onNavigateToEditWishlist = { id ->
+                    navController.navigate(Screen.EditWishlist.createRoute(id))
+                },
+                onNavigateToEditRegularPayment = { id ->
+                    navController.navigate(Screen.EditRegularPayment.createRoute(id))
+                }
+            )
         }
         composable(Screen.WishlistList.route) {
             WishlistListScreen(

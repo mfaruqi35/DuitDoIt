@@ -1,6 +1,7 @@
 package com.bigbrain.duitdoit.presentation.extras
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -34,6 +35,8 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 fun ExtrasScreen(
     onNavigateToWishlistList: () -> Unit,
     onNavigateToRegularPaymentList: () -> Unit,
+    onNavigateToEditWishlist: (Long) -> Unit,
+    onNavigateToEditRegularPayment: (Long) -> Unit,
     viewModel: ExtrasViewModel = hiltViewModel()
 ) {
     val wishlistItems by viewModel.wishlistItems.collectAsState()
@@ -138,7 +141,7 @@ fun ExtrasScreen(
                     } else {
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             items(regularPayments.take(3)) { payment ->
-                                RegularPaymentCard(payment = payment)
+                                RegularPaymentCard(payment = payment, onClick = { onNavigateToEditRegularPayment(payment.id) })
                             }
                         }
                     }
@@ -173,7 +176,7 @@ fun ExtrasScreen(
                     } else {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             wishlistItems.take(3).forEach { item ->
-                                WishlistItemCard(item = item, accounts = accounts)
+                                WishlistItemCard(item = item, accounts = accounts, onClick = { onNavigateToEditWishlist(item.id) })
                             }
                         }
                     }
@@ -184,7 +187,7 @@ fun ExtrasScreen(
 }
 
 @Composable
-fun RegularPaymentCard(payment: RegularPaymentEntity) {
+fun RegularPaymentCard(payment: RegularPaymentEntity, onClick: () -> Unit = {}) {
     val iconColors = mapOf(
         "ic_streaming" to Color(0xFFE50914),
         "ic_iuran" to Color(0xFF16A34A),
@@ -197,7 +200,9 @@ fun RegularPaymentCard(payment: RegularPaymentEntity) {
     val iconRes = getRegularPaymentIconRes(payment.icon)
 
     Card(
-        modifier = Modifier.width(160.dp),
+        modifier = Modifier
+            .width(160.dp)
+            .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         border = androidx.compose.foundation.BorderStroke(1.dp, Border)
@@ -250,7 +255,7 @@ fun RegularPaymentCard(payment: RegularPaymentEntity) {
 }
 
 @Composable
-fun WishlistItemCard(item: WishlistEntity, accounts: List<com.bigbrain.duitdoit.data.local.entity.AccountEntity>) {
+fun WishlistItemCard(item: WishlistEntity, accounts: List<com.bigbrain.duitdoit.data.local.entity.AccountEntity>, onClick: () -> Unit = {}) {
     val priorityColor = when (item.priority) {
         "high" -> PriorityHigh
         "medium" -> PriorityMedium
@@ -274,7 +279,9 @@ fun WishlistItemCard(item: WishlistEntity, accounts: List<com.bigbrain.duitdoit.
     val iconRes = getWishlistIconRes(item.icon)
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         border = androidx.compose.foundation.BorderStroke(1.dp, Border)
